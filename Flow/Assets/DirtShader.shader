@@ -1,4 +1,4 @@
-﻿Shader "Flow/Water"
+﻿Shader "Flow/Dirt"
 {
 	Properties
 	{
@@ -49,13 +49,6 @@
 			{
 				// sample the texture
 				fixed4 pixel = tex2D(_MainTex, i.uv);
-
-				fixed4 pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
-				fixed4 pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
-				fixed4 pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
-				fixed4 pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
-
-				pixel.r = (pixel.r + pixel_n.r + pixel_e.r +  pixel_s.r + pixel_w.r) / 5.0;
 
 				return pixel;
 			}

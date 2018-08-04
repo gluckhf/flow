@@ -1,10 +1,12 @@
-﻿Shader "Flow/Water"
+﻿Shader "Flow/World"
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+
+		_WaterTex ("WaterTex", 2D) = "white" {}
+		_DirtTex ("DirtTex", 2D) = "white" {}
 	}
 	SubShader
 	{
@@ -32,8 +34,8 @@
 			};
 
 			// Must be redeclared from Properties to be able to be used
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			sampler2D _WaterTex;
+			sampler2D _DirtTex;
 			float _TexelWidth;
 			float _TexelHeight;
 			
@@ -41,23 +43,16 @@
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+				o.uv = v.uv;
 				return o;
 			}
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
 				// sample the texture
-				fixed4 pixel = tex2D(_MainTex, i.uv);
-
-				fixed4 pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
-				fixed4 pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
-				fixed4 pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
-				fixed4 pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
-
-				pixel.r = (pixel.r + pixel_n.r + pixel_e.r +  pixel_s.r + pixel_w.r) / 5.0;
-
-				return pixel;
+				fixed4 water = tex2D(_WaterTex, i.uv);
+				fixed4 dirt = tex2D(_DirtTex, i.uv);
+				return fixed4(dirt.r, 0, water.r, 1);
 			}
 			ENDCG
 		}
