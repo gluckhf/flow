@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh_renderer: {fileID: 592761663}
-  disco_material: {fileID: 2100000, guid: 3b510c0125992244d98c0b1500fc2120, type: 2}
+  water_material: {fileID: 2100000, guid: 3b510c0125992244d98c0b1500fc2120, type: 2}
 --- !u!23 &592761663
 MeshRenderer:
   m_ObjectHideFlags: 0
