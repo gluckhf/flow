@@ -21,7 +21,7 @@ public class MainScript : MonoBehaviour {
     private enum flows
     {
         water = 0,
-        mud,
+        steam,
         size
     }
     
@@ -87,6 +87,7 @@ public class MainScript : MonoBehaviour {
 
             // Water
             {
+                flow_materials[(int)flows.water].SetFloat("_FlowDivisor", 5.0f + (float)flows.size + 5.0f);
                 flow_materials[(int)flows.water].SetFloat("_FlowGradient", -1.0f / height);
 
                 Texture2D initial_data = new Texture2D(width, height);
@@ -103,9 +104,9 @@ public class MainScript : MonoBehaviour {
                 Graphics.Blit(initial_data, flow_textures[1, (int)flows.water]);
             }
 
-            // Mud
+            // steam
             {
-                flow_materials[(int)flows.mud].SetFloat("_FlowGradient", 1.0f / height);
+                flow_materials[(int)flows.steam].SetFloat("_FlowGradient", 1.0f / height);
 
                 Texture2D initial_data = new Texture2D(width, height);
                 for (int y = 0; y < height; y++)
@@ -117,8 +118,8 @@ public class MainScript : MonoBehaviour {
                     }
                 }
                 initial_data.Apply();
-                Graphics.Blit(initial_data, flow_textures[0, (int)flows.mud]);
-                Graphics.Blit(initial_data, flow_textures[1, (int)flows.mud]);
+                Graphics.Blit(initial_data, flow_textures[0, (int)flows.steam]);
+                Graphics.Blit(initial_data, flow_textures[1, (int)flows.steam]);
             }
         }
 
@@ -168,7 +169,7 @@ public class MainScript : MonoBehaviour {
                 height_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
                 height_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size + (float)solids.size);
                 height_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
-                height_material_flip_flops[i].SetTexture("_MudTex", flow_textures[i, (int)flows.mud]);
+                height_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
                 height_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
 
                 Graphics.Blit(null, height_texture, height_material_flip_flops[i]);
@@ -192,7 +193,7 @@ public class MainScript : MonoBehaviour {
                 world_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
                 world_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size);
                 world_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
-                world_material_flip_flops[i].SetTexture("_MudTex", flow_textures[i, (int)flows.mud]);
+                world_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
                 world_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
             }
         }
@@ -229,7 +230,7 @@ public class MainScript : MonoBehaviour {
             {
                 for (int j = -1; j < 1; j++)
                 {
-                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, Color.red);  
+                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, new Color(0.5f, 0f, 0f, 1f));  
                 }
             }
 
@@ -250,12 +251,41 @@ public class MainScript : MonoBehaviour {
             RenderTexture currentActiveRT = RenderTexture.active;
 
             // Set the supplied RenderTexture as the active one
+            RenderTexture.active = flow_textures[flip_flop, (int)flows.steam];
+
+            // Create a new Texture2D and read the RenderTexture image into it
+            Texture2D tex = new Texture2D(width, height);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            for (int i = -1; i < 1; i++)
+            {
+                for (int j = -1; j < 1; j++)
+                {
+                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, new Color(0.5f, 0f, 0f, 1f));
+                }
+            }
+            tex.Apply();
+
+            // TODO: Hack? This line shouldn't be required but somehow needs to be here.
+            // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
+            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.steam]);
+
+            // Restore previously active render texture
+            RenderTexture.active = currentActiveRT;
+        }
+
+        // On mouse click right
+        if (Input.GetMouseButton(2))
+        {
+            // Remember currently active render texture
+            RenderTexture currentActiveRT = RenderTexture.active;
+
+            // Set the supplied RenderTexture as the active one
             RenderTexture.active = solid_textures[flip_flop, (int)solids.dirt];
 
             // Create a new Texture2D and read the RenderTexture image into it
             Texture2D tex = new Texture2D(width, height);
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            tex.SetPixel(pos_grid.x, pos_grid.y, Color.red);
+            tex.SetPixel(pos_grid.x, pos_grid.y, new Color(1.0f, 0f, 0f, 1f));
             tex.Apply();
 
             // TODO: Hack? This line shouldn't be required but somehow needs to be here.
@@ -265,7 +295,7 @@ public class MainScript : MonoBehaviour {
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
         }
-        
+
         // Make the simulation run a lot faster than the framerate
         float time_step = 1f / update_rate;
         for (float i = 0; i < Time.deltaTime; i += time_step)
@@ -275,7 +305,7 @@ public class MainScript : MonoBehaviour {
 
             // Run the shaders for flowable elements
             Graphics.Blit(flow_textures[1 - flip_flop, (int)flows.water], flow_textures[flip_flop, (int)flows.water], flow_materials[(int)flows.water]);
-            Graphics.Blit(flow_textures[1 - flip_flop, (int)flows.mud], flow_textures[flip_flop, (int)flows.mud], flow_materials[(int)flows.mud]);
+            Graphics.Blit(flow_textures[1 - flip_flop, (int)flows.steam], flow_textures[flip_flop, (int)flows.steam], flow_materials[(int)flows.steam]);
 
             // Update the solid elements
             for (int j = 0; j < (int)solids.size; j++)

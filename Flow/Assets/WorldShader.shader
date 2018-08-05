@@ -3,7 +3,7 @@
 	Properties
 	{
 		_WaterTex ("WaterTex", 2D) = "white" {}
-		_MudTex ("MudTex", 2D) = "white" {}
+		_SteamTex ("SteamTex", 2D) = "white" {}
 		_DirtTex ("DirtTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
@@ -36,7 +36,7 @@
 
 			// Must be redeclared from Properties to be able to be used
 			sampler2D _WaterTex;
-			sampler2D _MudTex;
+			sampler2D _SteamTex;
 			sampler2D _DirtTex;
 			float _TexelWidth;
 			float _TexelHeight;
@@ -53,10 +53,11 @@
 			float4 frag (v2f i) : SV_Target
 			{
 				// sample the texture
-				float4 water = tex2D(_WaterTex, i.uv);
-				float4 mud = tex2D(_MudTex, i.uv);
-				float4 dirt = tex2D(_DirtTex, i.uv);
-				return float4(dirt.r*20, mud.r*20, water.r*20, 1);
+				float water = sqrt(tex2D(_WaterTex, i.uv).r);
+				float steam = sqrt(tex2D(_SteamTex, i.uv).r);
+				float dirt = sqrt(tex2D(_DirtTex, i.uv).r);
+
+				return float4(dirt/1.5 + steam, dirt/3.0 + steam, water*3 + steam, 1);
 			}
 			ENDCG
 		}
