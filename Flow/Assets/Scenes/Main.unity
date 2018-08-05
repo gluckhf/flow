@@ -282,7 +282,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh_renderer: {fileID: 592761663}
+  height_material: {fileID: 2100000, guid: 8d66768396142cf49a004f835a9b3bf9, type: 2}
+  world_material: {fileID: 2100000, guid: d5bec54ce1397ab4998dadedd0fcdf3b, type: 2}
   water_material: {fileID: 2100000, guid: 3b510c0125992244d98c0b1500fc2120, type: 2}
+  dirt_material: {fileID: 2100000, guid: eadf0cd51665d7649b26efd74558931f, type: 2}
   DebugText: {fileID: 609288946}
 --- !u!23 &592761663
 MeshRenderer:

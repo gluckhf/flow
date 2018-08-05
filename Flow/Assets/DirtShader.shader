@@ -3,8 +3,10 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+		_HeightTex ("HeightTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+		_NumElements ("NumElements", float) = 1
 	}
 	SubShader
 	{
@@ -33,10 +35,12 @@
 
 			// Must be redeclared from Properties to be able to be used
 			sampler2D _MainTex;
+			sampler2D _HeightTex;
 			float4 _MainTex_ST;
 			float _TexelWidth;
 			float _TexelHeight;
-			
+			float _NumElements;
+
 			v2f vert (appdata v)
 			{
 				v2f o;

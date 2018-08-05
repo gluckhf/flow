@@ -1,4 +1,4 @@
-﻿Shader "Flow/Water"
+﻿Shader "Flow/Mud"
 {
 	Properties
 	{
@@ -51,12 +51,12 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				// sample the water texture pixels
-				fixed4 water_pixel = tex2D(_MainTex, i.uv);
-				fixed4 water_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
-				fixed4 water_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
-				fixed4 water_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
-				fixed4 water_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
+				// sample the mud texture pixels
+				fixed4 mud_pixel = tex2D(_MainTex, i.uv);
+				fixed4 mud_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
+				fixed4 mud_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
+				fixed4 mud_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
+				fixed4 mud_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
 
 				// sample the height texture pixels
 				fixed4 height_pixel = tex2D(_HeightTex, i.uv)* _NumElements;
@@ -67,25 +67,25 @@
 
 				float divisor = 5 + _NumElements;
 
-				water_pixel.r = water_pixel.r
+				mud_pixel.r = mud_pixel.r
 				
 				// North
-				- max(min(height_pixel.r - height_pixel_n.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_n.r - height_pixel.r, water_pixel_n.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_n.r, mud_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_n.r - height_pixel.r, mud_pixel_n.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// East
-				- max(min(height_pixel.r - height_pixel_e.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_e.r - height_pixel.r, water_pixel_e.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_e.r, mud_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_e.r - height_pixel.r, mud_pixel_e.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// South
-				- max(min(height_pixel.r - height_pixel_s.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_s.r - height_pixel.r, water_pixel_s.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_s.r, mud_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_s.r - height_pixel.r, mud_pixel_s.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// West
-				- max(min(height_pixel.r - height_pixel_w.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_w.r - height_pixel.r, water_pixel_w.r) / divisor, 0); // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_w.r, mud_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_w.r - height_pixel.r, mud_pixel_w.r) / divisor, 0); // assume that the other cell has more "height"
 				
-				return water_pixel;
+				return mud_pixel;
 			}
 			ENDCG
 		}

@@ -6,15 +6,24 @@ using UnityEngine.UI;
 public class MainScript : MonoBehaviour {
 
     public MeshRenderer mesh_renderer;
-    RenderTexture render_texture;
+    
+    // Height map
+    public Material height_material;
+    private Material[] height_material_flip_flops = new Material[2];
+    RenderTexture height_texture;
 
     // World compositing
     public Material world_material;
     private Material[] world_material_flip_flops = new Material[2];
+    RenderTexture render_texture;
 
     // Water components
     public Material water_material;
     RenderTexture[] water_texture = new RenderTexture[2];
+
+    // Mud components
+    public Material mud_material;
+    RenderTexture[] mud_texture = new RenderTexture[2];
 
     // Dirt components
     public Material dirt_material;
@@ -39,20 +48,35 @@ public class MainScript : MonoBehaviour {
         render_texture.autoGenerateMips = false;
         render_texture.wrapMode = TextureWrapMode.Repeat;
         render_texture.filterMode = FilterMode.Point;
+
+        height_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        height_texture.useMipMap = false;
+        height_texture.autoGenerateMips = false;
+        height_texture.wrapMode = TextureWrapMode.Repeat;
+        height_texture.filterMode = FilterMode.Point;
         
         // Set up the element textures
         // TODO: Element bank with double indexing
+        int num_elements = 0;
         for (int i = 0; i < 2; i++)
         {
             water_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
             water_texture[i].useMipMap = false;
             water_texture[i].autoGenerateMips = false;
             water_texture[i].filterMode = FilterMode.Point;
+            num_elements++;
+
+            mud_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            mud_texture[i].useMipMap = false;
+            mud_texture[i].autoGenerateMips = false;
+            mud_texture[i].filterMode = FilterMode.Point;
+            num_elements++;
 
             dirt_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
             dirt_texture[i].useMipMap = false;
             dirt_texture[i].autoGenerateMips = false;
             dirt_texture[i].filterMode = FilterMode.Point;
+            num_elements++;
         }
 
         // Set up the mesh renderer
@@ -61,23 +85,46 @@ public class MainScript : MonoBehaviour {
         // Set the sizes of the element materials
         water_material.SetFloat("_TexelWidth", 1.0f / width);
         water_material.SetFloat("_TexelHeight", 1.0f / height);
+        water_material.SetFloat("_NumElements", num_elements);
+
+        mud_material.SetFloat("_TexelWidth", 1.0f / width);
+        mud_material.SetFloat("_TexelHeight", 1.0f / height);
+        mud_material.SetFloat("_NumElements", num_elements);
 
         dirt_material.SetFloat("_TexelWidth", 1.0f / width);
         dirt_material.SetFloat("_TexelHeight", 1.0f / height);
+        dirt_material.SetFloat("_NumElements", num_elements);
 
-        // Initialize water to random
+        // Initialize water
         {
             Texture2D initial_data = new Texture2D(width, height);
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    initial_data.SetPixel(x, y, new Color(0, 0, 0));// Random.Range(0f,1f),0,0));
+                    //initial_data.SetPixel(x, y, new Color(Random.Range(0f,1f),0,0));
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
                 }
             }
             initial_data.Apply();
             Graphics.Blit(initial_data, water_texture[0]);
             Graphics.Blit(initial_data, water_texture[1]);
+        }
+
+        // Initialize mud
+        {
+            Texture2D initial_data = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    //initial_data.SetPixel(x, y, new Color(Random.Range(0f, 1f), 0, 0));
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                }
+            }
+            initial_data.Apply();
+            Graphics.Blit(initial_data, mud_texture[0]);
+            Graphics.Blit(initial_data, mud_texture[1]);
         }
 
         // Initialize dirt to boxes
@@ -87,7 +134,7 @@ public class MainScript : MonoBehaviour {
             {
                 for (int x = 0; x < width; x++)
                 {
-                    if (y == 16 || y == 48 || x == 32 || x == 96)
+                    if (y == 16 || y == 32 || y == 48 || x == 32 || x == 64 || x == 96)
                     {
                         initial_data.SetPixel(x, y, new Color(1, 0, 0));
                     }
@@ -101,15 +148,40 @@ public class MainScript : MonoBehaviour {
             Graphics.Blit(initial_data, dirt_texture[0]);
             Graphics.Blit(initial_data, dirt_texture[1]);
         }
-
+        
         // Set up the world components which point to the now-initialized textures
         for (int i = 0; i < 2; i++)
         {
             world_material_flip_flops[i] = new Material(world_material);
             world_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
             world_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
+            world_material_flip_flops[i].SetFloat("_NumElements", num_elements);
             world_material_flip_flops[i].SetTexture("_WaterTex", water_texture[i]);
+            world_material_flip_flops[i].SetTexture("_MudTex", mud_texture[i]);
             world_material_flip_flops[i].SetTexture("_DirtTex", dirt_texture[i]);
+        }
+
+        // Set up the height map components which point to the now-initialized textures
+        for (int i = 0; i < 2; i++)
+        {
+            height_material_flip_flops[i] = new Material(height_material);
+            height_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
+            height_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
+            height_material_flip_flops[i].SetFloat("_NumElements", num_elements);
+            height_material_flip_flops[i].SetTexture("_WaterTex", water_texture[i]);
+            height_material_flip_flops[i].SetTexture("_MudTex", mud_texture[i]);
+            height_material_flip_flops[i].SetTexture("_DirtTex", dirt_texture[i]);
+        }
+
+        // Set up the elements to reference the height maps
+        dirt_material.SetTexture("_HeightTex", height_texture);
+        mud_material.SetTexture("_HeightTex", height_texture);
+        water_material.SetTexture("_HeightTex", height_texture);
+
+        // Write initial height maps
+        for (int i = 0; i < 2; i++)
+        {
+            Graphics.Blit(null, height_texture, height_material_flip_flops[i]);
         }
     }
 	
@@ -123,10 +195,32 @@ public class MainScript : MonoBehaviour {
         Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 local_pos = transform.InverseTransformPoint(pos);
         Vector3 texture_pos = local_pos + Vector3.one * 0.5f;
-        Vector2Int pos_new = new Vector2Int((int)(texture_pos.x * width), (int)(texture_pos.y * height));
+        Vector2Int pos_grid = new Vector2Int((int)(texture_pos.x * width), (int)(texture_pos.y * height));
 
-        DebugText.text = pos.ToString() + "\n" + local_pos.ToString() + "\n" + texture_pos.ToString() + "\n" + pos_new.ToString();
-        
+        // Update the debug text - read how much mud/water there is at the mouse position
+        {
+
+            // Remember currently active render texture
+            RenderTexture currentActiveRT = RenderTexture.active;
+
+            // Get water pixel
+            RenderTexture.active = water_texture[flip_flop];
+            Texture2D tex = new Texture2D(water_texture[flip_flop].width, water_texture[flip_flop].height);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            Color water = tex.GetPixel(pos_grid.x, pos_grid.y);
+
+            // Get mud pixel
+            RenderTexture.active = mud_texture[flip_flop];
+            tex = new Texture2D(mud_texture[flip_flop].width, mud_texture[flip_flop].height);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            Color mud = tex.GetPixel(pos_grid.x, pos_grid.y);
+
+            // Restore previously active render texture
+            RenderTexture.active = currentActiveRT;
+            
+            DebugText.text = pos_grid.ToString() + "\n Water:" + water.r.ToString() + "\n Mud:" + mud.r.ToString();
+        }
+
         // On mouse click left
         if (Input.GetMouseButton(0))
         {
@@ -139,7 +233,15 @@ public class MainScript : MonoBehaviour {
             // Create a new Texture2D and read the RenderTexture image into it
             Texture2D tex = new Texture2D(water_texture[flip_flop].width, water_texture[flip_flop].height);
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            tex.SetPixel(pos_new.x, pos_new.y, Color.red);
+            
+            for (int i = -1; i < 1; i++)
+            {
+                for (int j = -1; j < 1; j++)
+                {
+                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, Color.red);  
+                }
+            }
+
             tex.Apply();
 
             // TODO: Hack? This line shouldn't be required but somehow needs to be here.
@@ -157,17 +259,17 @@ public class MainScript : MonoBehaviour {
             RenderTexture currentActiveRT = RenderTexture.active;
 
             // Set the supplied RenderTexture as the active one
-            RenderTexture.active = dirt_texture[flip_flop];
+            RenderTexture.active = mud_texture[flip_flop];
 
             // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(dirt_texture[flip_flop].width, dirt_texture[flip_flop].height);
+            Texture2D tex = new Texture2D(mud_texture[flip_flop].width, mud_texture[flip_flop].height);
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            tex.SetPixel(pos_new.x, pos_new.y, Color.red);
+            tex.SetPixel(pos_grid.x, pos_grid.y, Color.red);
             tex.Apply();
 
             // TODO: Hack? This line shouldn't be required but somehow needs to be here.
             // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
-            Graphics.Blit(tex, dirt_texture[flip_flop]);
+            Graphics.Blit(tex, mud_texture[flip_flop]);
 
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
@@ -175,12 +277,18 @@ public class MainScript : MonoBehaviour {
 
         // Flip the buffer
         flip_flop = 1 - flip_flop;
-
-        // Run the shaders
+        
+        // Run the shaders for flowable elements
         Graphics.Blit(water_texture[1 - flip_flop], water_texture[flip_flop], water_material);
+        Graphics.Blit(mud_texture[1 - flip_flop], mud_texture[flip_flop], mud_material);
+
+        // Dirt doesn't flow so it doesn't need a shader, but it's here for completeness and maybe use later
         Graphics.Blit(dirt_texture[1 - flip_flop], dirt_texture[flip_flop], dirt_material);
 
         // Use Blit to run the world shader (which references the water and dirt textures) and save the result to render_texture
         Graphics.Blit(null, render_texture, world_material_flip_flops[flip_flop]);
+
+        // Write the new height maps for use next frame
+        Graphics.Blit(null, height_texture, height_material_flip_flops[flip_flop]);
     }
 }

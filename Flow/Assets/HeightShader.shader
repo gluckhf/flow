@@ -1,4 +1,4 @@
-﻿Shader "Flow/World"
+﻿Shader "Flow/Height"
 {
 	Properties
 	{
@@ -52,11 +52,12 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				// sample the texture
+				// Sum the heights of all elements
 				fixed4 water = tex2D(_WaterTex, i.uv);
 				fixed4 mud = tex2D(_MudTex, i.uv);
 				fixed4 dirt = tex2D(_DirtTex, i.uv);
-				return fixed4(dirt.r, mud.r, water.r, 1);
+
+				return fixed4((dirt.r + mud.r + water.r) / _NumElements, 0, 0, 1);
 			}
 			ENDCG
 		}
