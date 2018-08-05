@@ -134,7 +134,7 @@ public class MainScript : MonoBehaviour {
             {
                 for (int x = 0; x < width; x++)
                 {
-                    if (y == 0 || y == 16 || x == 0 || x == 16)
+                    if (y == 0 || y == 16 || y == height-1 || x == 0 || x == 16 || x == width-1)
                     {
                         initial_data.SetPixel(x, y, new Color(1, 0, 0));
                     }

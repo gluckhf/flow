@@ -51,12 +51,12 @@
 			
 			float4 frag (v2f i) : SV_Target
 			{
-				// sample the water texture pixels
-				float4 water_pixel = tex2D(_MainTex, i.uv);
-				float4 water_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
-				float4 water_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
-				float4 water_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
-				float4 water_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
+				// sample this texture pixels
+				float4 this_pixel = tex2D(_MainTex, i.uv);
+				float4 this_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
+				float4 this_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
+				float4 this_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
+				float4 this_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
 
 				// sample the height texture pixels
 				float4 height_pixel = tex2D(_HeightTex, i.uv)* _NumElements;
@@ -66,26 +66,27 @@
 				float4 height_pixel_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0))* _NumElements;
 
 				float divisor = 5 + _NumElements;
+				float flow_gradient = _TexelHeight;
 
-				water_pixel.r = water_pixel.r
+				this_pixel.r = this_pixel.r
 				
 				// North
-				- max(min(height_pixel.r - height_pixel_n.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_n.r - height_pixel.r, water_pixel_n.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min((height_pixel.r - flow_gradient) - height_pixel_n.r, this_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_n.r - (height_pixel.r - flow_gradient), this_pixel_n.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// East
-				- max(min(height_pixel.r - height_pixel_e.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_e.r - height_pixel.r, water_pixel_e.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_e.r, this_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_e.r - height_pixel.r, this_pixel_e.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// South
-				- max(min(height_pixel.r - height_pixel_s.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_s.r - height_pixel.r, water_pixel_s.r) / divisor, 0) // assume that the other cell has more "height"
+				- max(min(height_pixel.r - (height_pixel_s.r - flow_gradient), this_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min((height_pixel_s.r - flow_gradient) - height_pixel.r, this_pixel_s.r) / divisor, 0) // assume that the other cell has more "height"
 				
 				// West
-				- max(min(height_pixel.r - height_pixel_w.r, water_pixel.r) / divisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_w.r - height_pixel.r, water_pixel_w.r) / divisor, 0); // assume that the other cell has more "height"
+				- max(min(height_pixel.r - height_pixel_w.r, this_pixel.r) / divisor, 0) // assume that this cell has more "height"
+				+ max(min(height_pixel_w.r - height_pixel.r, this_pixel_w.r) / divisor, 0); // assume that the other cell has more "height"
 				
-				return water_pixel;
+				return this_pixel;
 			}
 			ENDCG
 		}
