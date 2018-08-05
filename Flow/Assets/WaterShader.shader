@@ -49,21 +49,21 @@
 				return o;
 			}
 			
-			fixed4 frag (v2f i) : SV_Target
+			float4 frag (v2f i) : SV_Target
 			{
 				// sample the water texture pixels
-				fixed4 water_pixel = tex2D(_MainTex, i.uv);
-				fixed4 water_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
-				fixed4 water_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
-				fixed4 water_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
-				fixed4 water_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
+				float4 water_pixel = tex2D(_MainTex, i.uv);
+				float4 water_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
+				float4 water_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
+				float4 water_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
+				float4 water_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
 
 				// sample the height texture pixels
-				fixed4 height_pixel = tex2D(_HeightTex, i.uv)* _NumElements;
-				fixed4 height_pixel_n = tex2D(_HeightTex, i.uv + fixed2(0,_TexelHeight))* _NumElements;
-				fixed4 height_pixel_e = tex2D(_HeightTex, i.uv + fixed2(_TexelWidth,0))* _NumElements;
-				fixed4 height_pixel_s = tex2D(_HeightTex, i.uv - fixed2(0,_TexelHeight))* _NumElements;
-				fixed4 height_pixel_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0))* _NumElements;
+				float4 height_pixel = tex2D(_HeightTex, i.uv)* _NumElements;
+				float4 height_pixel_n = tex2D(_HeightTex, i.uv + fixed2(0,_TexelHeight))* _NumElements;
+				float4 height_pixel_e = tex2D(_HeightTex, i.uv + fixed2(_TexelWidth,0))* _NumElements;
+				float4 height_pixel_s = tex2D(_HeightTex, i.uv - fixed2(0,_TexelHeight))* _NumElements;
+				float4 height_pixel_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0))* _NumElements;
 
 				float divisor = 5 + _NumElements;
 

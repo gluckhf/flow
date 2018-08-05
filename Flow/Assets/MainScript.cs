@@ -43,13 +43,13 @@ public class MainScript : MonoBehaviour {
         transform.localScale = new Vector3(1f, (float)height / (float)width, 1f);
         
         // Set up the main render texture
-        render_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        render_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
         render_texture.useMipMap = false;
         render_texture.autoGenerateMips = false;
         render_texture.wrapMode = TextureWrapMode.Repeat;
         render_texture.filterMode = FilterMode.Point;
 
-        height_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        height_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
         height_texture.useMipMap = false;
         height_texture.autoGenerateMips = false;
         height_texture.wrapMode = TextureWrapMode.Repeat;
@@ -60,19 +60,19 @@ public class MainScript : MonoBehaviour {
         int num_elements = 0;
         for (int i = 0; i < 2; i++)
         {
-            water_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            water_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
             water_texture[i].useMipMap = false;
             water_texture[i].autoGenerateMips = false;
             water_texture[i].filterMode = FilterMode.Point;
             num_elements++;
 
-            mud_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            mud_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
             mud_texture[i].useMipMap = false;
             mud_texture[i].autoGenerateMips = false;
             mud_texture[i].filterMode = FilterMode.Point;
             num_elements++;
 
-            dirt_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            dirt_texture[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
             dirt_texture[i].useMipMap = false;
             dirt_texture[i].autoGenerateMips = false;
             dirt_texture[i].filterMode = FilterMode.Point;
@@ -134,7 +134,7 @@ public class MainScript : MonoBehaviour {
             {
                 for (int x = 0; x < width; x++)
                 {
-                    if (y == 16 || y == 32 || y == 48 || x == 32 || x == 64 || x == 96)
+                    if (y == 0 || y == 16 || x == 0 || x == 16)
                     {
                         initial_data.SetPixel(x, y, new Color(1, 0, 0));
                     }
@@ -197,29 +197,7 @@ public class MainScript : MonoBehaviour {
         Vector3 texture_pos = local_pos + Vector3.one * 0.5f;
         Vector2Int pos_grid = new Vector2Int((int)(texture_pos.x * width), (int)(texture_pos.y * height));
 
-        // Update the debug text - read how much mud/water there is at the mouse position
-        {
-
-            // Remember currently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            // Get water pixel
-            RenderTexture.active = water_texture[flip_flop];
-            Texture2D tex = new Texture2D(water_texture[flip_flop].width, water_texture[flip_flop].height);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            Color water = tex.GetPixel(pos_grid.x, pos_grid.y);
-
-            // Get mud pixel
-            RenderTexture.active = mud_texture[flip_flop];
-            tex = new Texture2D(mud_texture[flip_flop].width, mud_texture[flip_flop].height);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            Color mud = tex.GetPixel(pos_grid.x, pos_grid.y);
-
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
-            
-            DebugText.text = pos_grid.ToString() + "\n Water:" + water.r.ToString() + "\n Mud:" + mud.r.ToString();
-        }
+        DebugText.text = pos_grid.ToString();
 
         // On mouse click left
         if (Input.GetMouseButton(0))

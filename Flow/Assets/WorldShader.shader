@@ -50,13 +50,13 @@
 				return o;
 			}
 			
-			fixed4 frag (v2f i) : SV_Target
+			float4 frag (v2f i) : SV_Target
 			{
 				// sample the texture
-				fixed4 water = tex2D(_WaterTex, i.uv);
-				fixed4 mud = tex2D(_MudTex, i.uv);
-				fixed4 dirt = tex2D(_DirtTex, i.uv);
-				return fixed4(dirt.r, mud.r, water.r, 1);
+				float4 water = tex2D(_WaterTex, i.uv);
+				float4 mud = tex2D(_MudTex, i.uv);
+				float4 dirt = tex2D(_DirtTex, i.uv);
+				return float4(dirt.r*20, mud.r*20, water.r*20, 1);
 			}
 			ENDCG
 		}

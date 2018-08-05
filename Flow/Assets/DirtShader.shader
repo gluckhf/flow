@@ -49,10 +49,10 @@
 				return o;
 			}
 			
-			fixed4 frag (v2f i) : SV_Target
+			float4 frag (v2f i) : SV_Target
 			{
 				// sample the texture
-				fixed4 pixel = tex2D(_MainTex, i.uv);
+				float4 pixel = tex2D(_MainTex, i.uv);
 
 				return pixel;
 			}
