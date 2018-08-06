@@ -42,18 +42,45 @@ public class MainScript : MonoBehaviour {
     public Text DebugText;
 
     // World size - powers of 2 for optimal efficiency
-    public int width = 128;
-    public int height = 64;
+    public int width = 256;
+    public int height = 128;
 
     // A-B rendering buffer selection
     int flip_flop = 0;
 
     // Update rate (per second) - independent of framerate
-    [Range(500f, 2000f)]
-    public float update_rate = 1000f;
+    [Range(60f, 2000f)]
+    public float update_rate = 600f;
+
+    // Element selection
+    private enum element_selection
+    {
+         all = 0,
+         water,
+         steam,
+         dirt,
+         size
+    }
+
+    int selected_element = 0;
+    bool invert_selection = false;
+
+    string element_selection_text = "";
 
     // Use this for initialization
     void Start() {
+        // Initialize the element selection text
+        element_selection_text = "";
+        for (int i = 1; i < (int)element_selection.size; i++)
+        {
+            element_selection_text += i.ToString() + ":";
+            if ((i != selected_element) == invert_selection)
+            {
+                element_selection_text += "    ";
+            }
+            element_selection_text += ((element_selection)i).ToString() + "\n";
+        }
+
         // Match the local scale to the scale set up in the input parameters
         transform.localScale = new Vector3(1f, (float)height / (float)width, 1f);
 
@@ -211,91 +238,140 @@ public class MainScript : MonoBehaviour {
         Vector3 texture_pos = local_pos + Vector3.one * 0.5f;
         Vector2Int pos_grid = new Vector2Int((int)(texture_pos.x * width), (int)(texture_pos.y * height));
 
-        DebugText.text = pos_grid.ToString();
+        // Get the string of what characters were pressed last frame
+        foreach (char c in Input.inputString)
+        {
+            // Numbers select elements
+            if('0' <= c && c < '0' + (int)element_selection.size)
+            {
+                if(c == '0')
+                {
+                    selected_element = 0;
+                    invert_selection = true;
+                }
+                else
+                {
+                    int new_selected_element = (int)(c - '0');
+                    if (new_selected_element != selected_element)
+                    {
+                        invert_selection = false;
+                    }
+                    else
+                    {
+                        invert_selection = !invert_selection;
+                    }
+                    selected_element = new_selected_element;
+                }
 
-        // On mouse click left
-        if (Input.GetMouseButton(0))
+                // Update the text
+                element_selection_text = "";
+                for (int i = 1; i < (int)element_selection.size; i++)
+                {
+                    element_selection_text += i.ToString() + ":";
+                    if ((i != selected_element) == invert_selection)
+                    {
+                        element_selection_text += "    ";
+                    }
+                    element_selection_text += ((element_selection)i).ToString() + "\n";
+                }
+            }
+        }
+          
+        DebugText.text = pos_grid.ToString() + "\n" + element_selection_text;
+
+        // On mouse clicks
+        if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
             // Remember currently active render texture
             RenderTexture currentActiveRT = RenderTexture.active;
 
-            // Set the supplied RenderTexture as the active one
-            RenderTexture.active = flow_textures[flip_flop, (int)flows.water];
-
-            // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(width, height);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            
-            for (int i = -1; i < 1; i++)
+            for (int i = 1; i < (int)element_selection.size; i++)
             {
-                for (int j = -1; j < 1; j++)
+                if ((i != selected_element) == invert_selection)
                 {
-                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, new Color(0.5f, 0f, 0f, 1f));  
+                    // Set the selected RenderTexture as the active one
+                    switch ((element_selection)i)
+                    {
+                        case element_selection.dirt:
+                            RenderTexture.active = solid_textures[flip_flop, (int)solids.dirt];
+                            break;
+                        case element_selection.water:
+                            RenderTexture.active = flow_textures[flip_flop, (int)flows.water];
+                            break;
+                        case element_selection.steam:
+                            RenderTexture.active = flow_textures[flip_flop, (int)flows.steam];
+                            break;
+                    }
+
+                    // Create a new Texture2D and read the RenderTexture image into it
+                    Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+                    tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+                    // Place lots
+                    if (Input.GetMouseButton(0))
+                    {
+                        for (int x = -1; x < 1; x++)
+                        {
+                            for (int y = -1; y < 1; y++)
+                            {
+                                tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
+                                    new Color(
+                                    Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 1f),
+                                    0f, 0f, 1f));
+                            }
+                        }
+                    }
+
+                    // Remove lots
+                    if (Input.GetMouseButton(1))
+                    {
+                        for (int x = -1; x < 1; x++)
+                        {
+                            for (int y = -1; y < 1; y++)
+                            {
+                                tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
+                                    new Color(
+                                    Mathf.Max(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r - 0.3f, 0f),
+                                    0f, 0f, 1f));
+                            }
+                        }
+                    }
+
+                    // Place one
+                    if (Input.GetMouseButton(2))
+                    {
+                        tex.SetPixel(pos_grid.x, pos_grid.y,
+                                    new Color(
+                                    Mathf.Min(tex.GetPixel(pos_grid.x, pos_grid.y).r + 0.5f, 1f),
+                                    0f, 0f, 1f));
+                    }
+                    
+                    tex.Apply();
+
+                    // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
+                    // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
+                    switch ((element_selection)i)
+                    {
+                        case element_selection.dirt:
+                            Graphics.Blit(tex, solid_textures[flip_flop, (int)solids.dirt]);
+                            break;
+                        case element_selection.water:
+                            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.water]);
+                            break;
+                        case element_selection.steam:
+                            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.steam]);
+                            break;
+                    }
+
+                    // Destroy the texture to stop memory leaks
+                    UnityEngine.Object.Destroy(tex);
                 }
             }
 
-            tex.Apply();
-
-            // TODO: Hack? This line shouldn't be required but somehow needs to be here.
-            // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
-            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.water]);
-
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
         }
-
-        // On mouse click right
-        if (Input.GetMouseButton(1))
-        {
-            // Remember currently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            // Set the supplied RenderTexture as the active one
-            RenderTexture.active = flow_textures[flip_flop, (int)flows.steam];
-
-            // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(width, height);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            for (int i = -1; i < 1; i++)
-            {
-                for (int j = -1; j < 1; j++)
-                {
-                    tex.SetPixel(pos_grid.x + i, pos_grid.y + j, new Color(0.5f, 0f, 0f, 1f));
-                }
-            }
-            tex.Apply();
-
-            // TODO: Hack? This line shouldn't be required but somehow needs to be here.
-            // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
-            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.steam]);
-
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
-        }
-
-        // On mouse click right
-        if (Input.GetMouseButton(2))
-        {
-            // Remember currently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            // Set the supplied RenderTexture as the active one
-            RenderTexture.active = solid_textures[flip_flop, (int)solids.dirt];
-
-            // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(width, height);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-            tex.SetPixel(pos_grid.x, pos_grid.y, new Color(1.0f, 0f, 0f, 1f));
-            tex.Apply();
-
-            // TODO: Hack? This line shouldn't be required but somehow needs to be here.
-            // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
-            Graphics.Blit(tex, solid_textures[flip_flop, (int)solids.dirt]);
-
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
-        }
-
+        
         // Make the simulation run a lot faster than the framerate
         float time_step = 1f / update_rate;
         for (float i = 0; i < Time.deltaTime; i += time_step)

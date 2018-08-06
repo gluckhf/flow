@@ -57,7 +57,11 @@
 				float steam = sqrt(tex2D(_SteamTex, i.uv).r);
 				float dirt = sqrt(tex2D(_DirtTex, i.uv).r);
 
-				return float4(dirt/1.5 + steam, dirt/3.0 + steam, water*3 + steam, 1);
+				return float4(
+				dirt/1.5 + steam, 
+				dirt/3.0 + steam, 
+				water*3 + steam, 
+				1);
 			}
 			ENDCG
 		}

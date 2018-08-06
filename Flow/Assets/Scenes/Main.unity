@@ -286,9 +286,9 @@ MonoBehaviour:
   world_material: {fileID: 2100000, guid: d5bec54ce1397ab4998dadedd0fcdf3b, type: 2}
   flow_material: {fileID: 2100000, guid: 54d27fced0805fd4b9b56ea08e028ac9, type: 2}
   DebugText: {fileID: 609288946}
-  width: 128
-  height: 64
-  update_rate: 1000
+  width: 256
+  height: 128
+  update_rate: 600
 --- !u!23 &592761663
 MeshRenderer:
   m_ObjectHideFlags: 0
