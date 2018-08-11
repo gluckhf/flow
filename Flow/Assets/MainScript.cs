@@ -22,6 +22,7 @@ public class MainScript : MonoBehaviour {
     {
         water = 0,
         steam,
+        lava,
         size
     }
     
@@ -49,8 +50,8 @@ public class MainScript : MonoBehaviour {
     int flip_flop = 0;
 
     // Update rate (per second) - independent of framerate
-    [Range(60f, 2000f)]
-    public float update_rate = 600f;
+    [Range(60f, 6000f)]
+    public float update_rate = 2000f;
 
     // Element selection
     private enum element_selection
@@ -58,6 +59,7 @@ public class MainScript : MonoBehaviour {
          all = 0,
          water,
          steam,
+         lava,
          dirt,
          size
     }
@@ -131,7 +133,7 @@ public class MainScript : MonoBehaviour {
                 Graphics.Blit(initial_data, flow_textures[1, (int)flows.water]);
             }
 
-            // steam
+            // Steam
             {
                 flow_materials[(int)flows.steam].SetFloat("_FlowGradient", 1.0f / height);
 
@@ -147,6 +149,25 @@ public class MainScript : MonoBehaviour {
                 initial_data.Apply();
                 Graphics.Blit(initial_data, flow_textures[0, (int)flows.steam]);
                 Graphics.Blit(initial_data, flow_textures[1, (int)flows.steam]);
+            }
+
+            // Lava
+            {
+                flow_materials[(int)flows.lava].SetFloat("_FlowDivisor", 25.0f + (float)flows.size + 5.0f);
+                flow_materials[(int)flows.lava].SetFloat("_FlowGradient", -1.0f / height);
+
+                Texture2D initial_data = new Texture2D(width, height);
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        //initial_data.SetPixel(x, y, new Color(Random.Range(0f, 1f), 0, 0));
+                        initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                    }
+                }
+                initial_data.Apply();
+                Graphics.Blit(initial_data, flow_textures[0, (int)flows.lava]);
+                Graphics.Blit(initial_data, flow_textures[1, (int)flows.lava]);
             }
         }
 
@@ -197,6 +218,7 @@ public class MainScript : MonoBehaviour {
                 height_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size + (float)solids.size);
                 height_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
                 height_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
+                height_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
                 height_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
 
                 Graphics.Blit(null, height_texture, height_material_flip_flops[i]);
@@ -221,6 +243,7 @@ public class MainScript : MonoBehaviour {
                 world_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size);
                 world_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
                 world_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
+                world_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
                 world_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
             }
         }
@@ -301,6 +324,9 @@ public class MainScript : MonoBehaviour {
                         case element_selection.steam:
                             RenderTexture.active = flow_textures[flip_flop, (int)flows.steam];
                             break;
+                        case element_selection.lava:
+                            RenderTexture.active = flow_textures[flip_flop, (int)flows.lava];
+                            break;
                     }
 
                     // Create a new Texture2D and read the RenderTexture image into it
@@ -361,6 +387,9 @@ public class MainScript : MonoBehaviour {
                         case element_selection.steam:
                             Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.steam]);
                             break;
+                        case element_selection.lava:
+                            Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.lava]);
+                            break;
                     }
 
                     // Destroy the texture to stop memory leaks
@@ -380,8 +409,10 @@ public class MainScript : MonoBehaviour {
             flip_flop = 1 - flip_flop;
 
             // Run the shaders for flowable elements
-            Graphics.Blit(flow_textures[1 - flip_flop, (int)flows.water], flow_textures[flip_flop, (int)flows.water], flow_materials[(int)flows.water]);
-            Graphics.Blit(flow_textures[1 - flip_flop, (int)flows.steam], flow_textures[flip_flop, (int)flows.steam], flow_materials[(int)flows.steam]);
+            for (int j = 0; j < (int)flows.size; j++)
+            {
+                Graphics.Blit(flow_textures[1 - flip_flop, j], flow_textures[flip_flop, j], flow_materials[j]);
+            }
 
             // Update the solid elements
             for (int j = 0; j < (int)solids.size; j++)

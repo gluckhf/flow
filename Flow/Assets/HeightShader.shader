@@ -4,6 +4,7 @@
 	{
 		_WaterTex ("WaterTex", 2D) = "white" {}
 		_SteamTex ("SteamTex", 2D) = "white" {}
+		_LavaTex ("LavaTex", 2D) = "white" {}
 		_DirtTex ("DirtTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
@@ -37,6 +38,7 @@
 			// Must be redeclared from Properties to be able to be used
 			sampler2D _WaterTex;
 			sampler2D _SteamTex;
+			sampler2D _LavaTex;
 			sampler2D _DirtTex;
 			float _TexelWidth;
 			float _TexelHeight;
@@ -55,9 +57,10 @@
 				// Sum the heights of all elements
 				float4 water = tex2D(_WaterTex, i.uv);
 				float4 steam = tex2D(_SteamTex, i.uv);
+				float4 lava = tex2D(_LavaTex, i.uv);
 				float4 dirt = tex2D(_DirtTex, i.uv);
 
-				return float4((dirt.r + steam.r + water.r) / _NumElements, 0, 0, 1);
+				return float4((dirt.r + steam.r + lava.r + water.r) / _NumElements, 0, 0, 1);
 			}
 			ENDCG
 		}
