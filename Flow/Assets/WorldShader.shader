@@ -61,7 +61,7 @@
 				float steam = pow(tex2D(_SteamTex, i.uv).r, 0.3);
 				float lava = pow(tex2D(_LavaTex, i.uv).r, 0.3);
 				float dirt = pow(tex2D(_DirtTex, i.uv).r, 0.3);
-				float heat = pow(tex2D(_HeatTex, i.uv).r, 0.3);
+				float heat = tex2D(_HeatTex, i.uv).r;
 
 				float r = dirt/1.5 + steam + lava;
 				float g = dirt/3.0 + steam;
@@ -79,8 +79,12 @@
 
 				// B&W + Heat
 				{
-					float avg = r+g+b / 10.0;
+					float avg = (r+g+b) / 3.0;
 				
+					if(heat > 1.0)
+					{
+						return float4(1, 0, 0, 1);
+					}
 					return float4(
 					avg + heat, 
 					avg + heat, 

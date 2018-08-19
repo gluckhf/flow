@@ -82,14 +82,18 @@
 				float4 flow_w = max(min(height_pixel_w.r - height_pixel.r, this_pixel_w.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
 							  - max(min(height_pixel.r - height_pixel_w.r, this_pixel.r) / _FlowDivisor, 0); // assume that this cell has more "height"
 
-				// This pixel amount is the sum of the flows
-				this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;
-
 				// For implementation of heat, keep track of what flowed in the relevant channels
 				// Only keep track of northern and eastern flows, 
 				// as e.g. southern flow = negative northern flow of the cell below
-				this_pixel.g = flow_n;
-				this_pixel.b = flow_e;
+				this_pixel.g = 0.5 + 0.5 * flow_e;
+				this_pixel.b = 0.5 + 0.5 * flow_w;
+
+				// Keep track of the old amount of stuff in this cell
+				this_pixel.a = this_pixel.r;
+
+				// This pixel red amount is the sum of the flows
+				this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;
+
 				return this_pixel;
 			}
 			ENDCG
