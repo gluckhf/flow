@@ -69,24 +69,27 @@
 				float4 height_pixel_s = tex2D(_HeightTex, i.uv - fixed2(0,_TexelHeight)) * _NumElements;
 				float4 height_pixel_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0)) * _NumElements;
 				
-				this_pixel.r = this_pixel.r
+				// Calculate the flows
+				float4 flow_n = max(min(height_pixel_n.r - (height_pixel.r + _FlowGradient), this_pixel_n.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
+						      - max(min((height_pixel.r + _FlowGradient) - height_pixel_n.r, this_pixel.r) / _FlowDivisor, 0); // assume that this cell has more "height"				
+
+				float4 flow_e = max(min(height_pixel_e.r - height_pixel.r, this_pixel_e.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
+							  - max(min(height_pixel.r - height_pixel_e.r, this_pixel.r) / _FlowDivisor, 0); // assume that this cell has more "height"
 				
-				// North
-				- max(min((height_pixel.r + _FlowGradient) - height_pixel_n.r, this_pixel.r) / _FlowDivisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_n.r - (height_pixel.r + _FlowGradient), this_pixel_n.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
+				float4 flow_s = max(min((height_pixel_s.r + _FlowGradient) - height_pixel.r, this_pixel_s.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
+					          - max(min(height_pixel.r - (height_pixel_s.r + _FlowGradient), this_pixel.r) / _FlowDivisor, 0); // assume that this cell has more "height"
 				
-				// East
-				- max(min(height_pixel.r - height_pixel_e.r, this_pixel.r) / _FlowDivisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_e.r - height_pixel.r, this_pixel_e.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
-				
-				// South
-				- max(min(height_pixel.r - (height_pixel_s.r + _FlowGradient), this_pixel.r) / _FlowDivisor, 0) // assume that this cell has more "height"
-				+ max(min((height_pixel_s.r + _FlowGradient) - height_pixel.r, this_pixel_s.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
-				
-				// West
-				- max(min(height_pixel.r - height_pixel_w.r, this_pixel.r) / _FlowDivisor, 0) // assume that this cell has more "height"
-				+ max(min(height_pixel_w.r - height_pixel.r, this_pixel_w.r) / _FlowDivisor, 0); // assume that the other cell has more "height"
-				
+				float4 flow_w = max(min(height_pixel_w.r - height_pixel.r, this_pixel_w.r) / _FlowDivisor, 0) // assume that the other cell has more "height"
+							  - max(min(height_pixel.r - height_pixel_w.r, this_pixel.r) / _FlowDivisor, 0); // assume that this cell has more "height"
+
+				// This pixel amount is the sum of the flows
+				this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;
+
+				// For implementation of heat, keep track of what flowed in the relevant channels
+				// Only keep track of northern and eastern flows, 
+				// as e.g. southern flow = negative northern flow of the cell below
+				this_pixel.g = flow_n;
+				this_pixel.b = flow_e;
 				return this_pixel;
 			}
 			ENDCG
