@@ -68,7 +68,7 @@
 				float b = water*3.0 + steam;
 
 				// Color
-				if(1)
+				if(0)
 				{
 					return float4(
 					r, 
@@ -79,7 +79,7 @@
 
 				// B&W + Heat
 				{
-					float avg = r+g+b / 5.0;
+					float avg = r+g+b / 10.0;
 				
 					return float4(
 					avg + heat, 

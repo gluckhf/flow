@@ -97,36 +97,7 @@ public class MainScript : MonoBehaviour {
         height_texture.autoGenerateMips = false;
         height_texture.wrapMode = TextureWrapMode.Repeat;
         height_texture.filterMode = FilterMode.Point;
-
-        // Heat
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                heat_textures[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
-                heat_textures[i].useMipMap = false;
-                heat_textures[i].autoGenerateMips = false;
-                heat_textures[i].filterMode = FilterMode.Point;
-            
-                heat_material_flip_flops[i] = new Material(heat_material);
-                heat_material_flip_flops[i].SetTexture("_HeightTex", height_texture);
-                heat_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
-                heat_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
-            }
-            
-            Texture2D initial_data = new Texture2D(width, height);
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
-                }
-            }
-            initial_data.Apply();
-            Graphics.Blit(initial_data, heat_textures[0]);
-            Graphics.Blit(initial_data, heat_textures[1]);
-            
-        }
-
+        
         // Flowables
         {
             // Set up flowable common attributes with default "hovering" gradient
@@ -243,6 +214,39 @@ public class MainScript : MonoBehaviour {
             }
         }
         
+        // Heat
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                heat_textures[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
+                heat_textures[i].useMipMap = false;
+                heat_textures[i].autoGenerateMips = false;
+                heat_textures[i].filterMode = FilterMode.Point;
+
+                heat_material_flip_flops[i] = new Material(heat_material);
+                heat_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
+                heat_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
+                heat_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
+                heat_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
+                heat_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
+                heat_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
+                heat_material_flip_flops[i].SetTexture("_HeightTex", height_texture);
+            }
+
+            Texture2D initial_data = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                }
+            }
+            initial_data.Apply();
+            Graphics.Blit(initial_data, heat_textures[0]);
+            Graphics.Blit(initial_data, heat_textures[1]);
+
+        }
+
         // Set up height map
         {
             for (int i = 0; i < 2; i++)
@@ -466,11 +470,11 @@ public class MainScript : MonoBehaviour {
                 Graphics.Blit(solid_textures[1 - flip_flop, j], solid_textures[flip_flop, j]); 
             }
 
-            // Run the heat shader to distribute heat based on flow
-            Graphics.Blit(heat_textures[1-flip_flop], heat_textures[flip_flop], heat_material_flip_flops[flip_flop]);
-
             // Write the new height maps for use next update
             Graphics.Blit(null, height_texture, height_material_flip_flops[flip_flop]);
+            
+            // Run the heat shader to distribute heat based on flow
+            Graphics.Blit(heat_textures[1 - flip_flop], heat_textures[flip_flop], heat_material_flip_flops[flip_flop]);
         }
 
         // Use Blit to run the world shader (which references the water and dirt textures) and save the result to render_texture
