@@ -6,6 +6,7 @@
 		_SteamTex ("SteamTex", 2D) = "white" {}
 		_LavaTex ("LavaTex", 2D) = "white" {}
 		_DirtTex ("DirtTex", 2D) = "white" {}
+		_HeatTex ("HeatTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
 		_NumElements ("NumElements", float) = 1
@@ -40,6 +41,7 @@
 			sampler2D _SteamTex;
 			sampler2D _LavaTex;
 			sampler2D _DirtTex;
+			sampler2D _HeatTex;
 			float _TexelWidth;
 			float _TexelHeight;
 			float _NumElements;
@@ -59,12 +61,32 @@
 				float steam = pow(tex2D(_SteamTex, i.uv).r, 0.3);
 				float lava = pow(tex2D(_LavaTex, i.uv).r, 0.3);
 				float dirt = pow(tex2D(_DirtTex, i.uv).r, 0.3);
+				float heat = pow(tex2D(_HeatTex, i.uv).r, 0.3);
 
-				return float4(
-				dirt/1.5 + steam + lava, 
-				dirt/3.0 + steam, 
-				water*3.0 + steam, 
-				1);
+				float r = dirt/1.5 + steam + lava;
+				float g = dirt/3.0 + steam;
+				float b = water*3.0 + steam;
+
+				// Color
+				if(1)
+				{
+					return float4(
+					r, 
+					g, 
+					b, 
+					1);
+				}
+
+				// B&W + Heat
+				{
+					float avg = r+g+b / 5.0;
+				
+					return float4(
+					avg + heat, 
+					avg + heat, 
+					avg, 
+					1);
+				}
 			}
 			ENDCG
 		}

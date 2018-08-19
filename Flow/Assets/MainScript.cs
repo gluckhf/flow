@@ -12,6 +12,11 @@ public class MainScript : MonoBehaviour {
     private Material[] height_material_flip_flops = new Material[2];
     RenderTexture height_texture;
 
+    // Heat map
+    public Material heat_material;
+    private Material[] heat_material_flip_flops = new Material[2];
+    RenderTexture[] heat_textures = new RenderTexture[2];
+
     // World compositing
     public Material world_material;
     private Material[] world_material_flip_flops = new Material[2];
@@ -61,6 +66,7 @@ public class MainScript : MonoBehaviour {
          steam,
          lava,
          dirt,
+         heat,
          size
     }
 
@@ -91,7 +97,36 @@ public class MainScript : MonoBehaviour {
         height_texture.autoGenerateMips = false;
         height_texture.wrapMode = TextureWrapMode.Repeat;
         height_texture.filterMode = FilterMode.Point;
-        
+
+        // Heat
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                heat_textures[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
+                heat_textures[i].useMipMap = false;
+                heat_textures[i].autoGenerateMips = false;
+                heat_textures[i].filterMode = FilterMode.Point;
+            
+                heat_material_flip_flops[i] = new Material(heat_material);
+                heat_material_flip_flops[i].SetTexture("_HeightTex", height_texture);
+                heat_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
+                heat_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
+            }
+            
+            Texture2D initial_data = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                }
+            }
+            initial_data.Apply();
+            Graphics.Blit(initial_data, heat_textures[0]);
+            Graphics.Blit(initial_data, heat_textures[1]);
+            
+        }
+
         // Flowables
         {
             // Set up flowable common attributes with default "hovering" gradient
@@ -245,6 +280,7 @@ public class MainScript : MonoBehaviour {
                 world_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
                 world_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
                 world_material_flip_flops[i].SetTexture("_DirtTex", solid_textures[i, (int)solids.dirt]);
+                world_material_flip_flops[i].SetTexture("_HeatTex", heat_textures[i]);
             }
         }
     }
@@ -327,24 +363,40 @@ public class MainScript : MonoBehaviour {
                         case element_selection.lava:
                             RenderTexture.active = flow_textures[flip_flop, (int)flows.lava];
                             break;
+                        case element_selection.heat:
+                            RenderTexture.active = heat_textures[flip_flop];
+                            break;
                     }
 
                     // Create a new Texture2D and read the RenderTexture image into it
                     Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
                     tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
 
-                    // Place lots
-                    if (Input.GetMouseButton(0))
+                    // Don't place all inverted elements
+                    if (i == selected_element)
                     {
-                        for (int x = -1; x < 1; x++)
+                        // Place lots
+                        if (Input.GetMouseButton(0))
                         {
-                            for (int y = -1; y < 1; y++)
+                            for (int x = -1; x < 1; x++)
                             {
-                                tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
-                                    new Color(
-                                    Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 1f),
-                                    0f, 0f, 1f));
+                                for (int y = -1; y < 1; y++)
+                                {
+                                    tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
+                                        new Color(
+                                        Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 1f),
+                                        0f, 0f, 1f));
+                                }
                             }
+                        }
+
+                        // Place one
+                        if (Input.GetMouseButton(2))
+                        {
+                            tex.SetPixel(pos_grid.x, pos_grid.y,
+                                        new Color(
+                                        Mathf.Min(tex.GetPixel(pos_grid.x, pos_grid.y).r + 0.5f, 1f),
+                                        0f, 0f, 1f));
                         }
                     }
 
@@ -361,15 +413,6 @@ public class MainScript : MonoBehaviour {
                                     0f, 0f, 1f));
                             }
                         }
-                    }
-
-                    // Place one
-                    if (Input.GetMouseButton(2))
-                    {
-                        tex.SetPixel(pos_grid.x, pos_grid.y,
-                                    new Color(
-                                    Mathf.Min(tex.GetPixel(pos_grid.x, pos_grid.y).r + 0.5f, 1f),
-                                    0f, 0f, 1f));
                     }
                     
                     tex.Apply();
@@ -389,6 +432,9 @@ public class MainScript : MonoBehaviour {
                             break;
                         case element_selection.lava:
                             Graphics.Blit(tex, flow_textures[flip_flop, (int)flows.lava]);
+                            break;
+                        case element_selection.heat:
+                            Graphics.Blit(tex, heat_textures[flip_flop]);
                             break;
                     }
 
@@ -419,6 +465,9 @@ public class MainScript : MonoBehaviour {
             {
                 Graphics.Blit(solid_textures[1 - flip_flop, j], solid_textures[flip_flop, j]); 
             }
+
+            // Run the heat shader to distribute heat based on flow
+            Graphics.Blit(heat_textures[1-flip_flop], heat_textures[flip_flop], heat_material_flip_flops[flip_flop]);
 
             // Write the new height maps for use next update
             Graphics.Blit(null, height_texture, height_material_flip_flops[flip_flop]);
