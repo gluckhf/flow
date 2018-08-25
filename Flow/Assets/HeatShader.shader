@@ -95,7 +95,6 @@
 				float4 height_s = tex2D(_HeightTex, i.uv - fixed2(0,_TexelHeight));
 				float4 height_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0));
 
-
 				// Heat movement
 				float cap_water = 1.0;
 				float cap_steam = 1.0;
@@ -104,6 +103,7 @@
 
 				float small = 0.001;
 
+				/*
 				// Calculate the heat flows inward in each direction
 				float flow_in_east = 
 				((-1.0 + 2.0 * water.g)* cap_water
@@ -139,7 +139,12 @@
 				+ lava.r * cap_lava 
 				+ dirt.r * cap_dirt
 				, small);
-				
+				*/
+
+
+
+
+
 
 
 				/*

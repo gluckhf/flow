@@ -8,7 +8,6 @@
 		_DirtTex ("DirtTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
-		_NumElements ("NumElements", float) = 1
 	}
 	SubShader
 	{
@@ -42,7 +41,6 @@
 			sampler2D _DirtTex;
 			float _TexelWidth;
 			float _TexelHeight;
-			float _NumElements;
 
 			v2f vert (appdata v)
 			{
@@ -60,7 +58,7 @@
 				float4 lava = tex2D(_LavaTex, i.uv);
 				float4 dirt = tex2D(_DirtTex, i.uv);
 
-				return float4((dirt.r + steam.r + lava.r + water.r) / _NumElements, 0, 0, 1);
+				return float4(dirt.r + steam.r + lava.r + water.r, 0, 0, 0);
 			}
 			ENDCG
 		}

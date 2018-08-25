@@ -9,7 +9,6 @@
 		_HeatTex ("HeatTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
-		_NumElements ("NumElements", float) = 1
 	}
 	SubShader
 	{
@@ -44,7 +43,6 @@
 			sampler2D _HeatTex;
 			float _TexelWidth;
 			float _TexelHeight;
-			float _NumElements;
 
 			v2f vert (appdata v)
 			{
@@ -68,7 +66,7 @@
 				float b = water*3.0 + steam;
 
 				// Color
-				if(0)
+				if(1)
 				{
 					return float4(
 					r, 

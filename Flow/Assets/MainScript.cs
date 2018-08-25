@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MainScript : MonoBehaviour {
+public class MainScript : MonoBehaviour
+{
 
     public MeshRenderer mesh_renderer;
-    
+
     // Height map
     public Material height_material;
     private Material[] height_material_flip_flops = new Material[2];
@@ -30,9 +31,9 @@ public class MainScript : MonoBehaviour {
         lava,
         size
     }
-    
+
     public Material flow_material;
-    private Material[] flow_materials = new Material[(int)flows.size];
+    private Material[,] flow_materials = new Material[2, (int)flows.size];
     RenderTexture[,] flow_textures = new RenderTexture[2, (int)flows.size];
 
     // Solid components
@@ -41,9 +42,9 @@ public class MainScript : MonoBehaviour {
         dirt = 0,
         size
     }
-    
+
     RenderTexture[,] solid_textures = new RenderTexture[2, (int)solids.size];
-    
+
     // Provides a link to the debug text
     public Text DebugText;
 
@@ -61,13 +62,13 @@ public class MainScript : MonoBehaviour {
     // Element selection
     private enum element_selection
     {
-         all = 0,
-         water,
-         steam,
-         lava,
-         dirt,
-         heat,
-         size
+        all = 0,
+        water,
+        steam,
+        lava,
+        dirt,
+        heat,
+        size
     }
 
     int selected_element = 0;
@@ -76,7 +77,8 @@ public class MainScript : MonoBehaviour {
     string element_selection_text = "";
 
     // Use this for initialization
-    void Start() {
+    void Start()
+    {
         // Initialize the element selection text
         element_selection_text = "";
         for (int i = 1; i < (int)element_selection.size; i++)
@@ -92,12 +94,27 @@ public class MainScript : MonoBehaviour {
         // Match the local scale to the scale set up in the input parameters
         transform.localScale = new Vector3(1f, (float)height / (float)width, 1f);
 
-        height_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
-        height_texture.useMipMap = false;
-        height_texture.autoGenerateMips = false;
-        height_texture.wrapMode = TextureWrapMode.Repeat;
-        height_texture.filterMode = FilterMode.Point;
-        
+        // Height texture
+        {
+            height_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            height_texture.useMipMap = false;
+            height_texture.autoGenerateMips = false;
+            height_texture.wrapMode = TextureWrapMode.Repeat;
+            height_texture.filterMode = FilterMode.Point;
+        }
+
+        // Heat textures
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                heat_textures[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+                heat_textures[i].useMipMap = false;
+                heat_textures[i].autoGenerateMips = false;
+                heat_textures[i].wrapMode = TextureWrapMode.Repeat;
+                heat_textures[i].filterMode = FilterMode.Point;
+            }
+        }
+
         // Flowables
         {
             // Set up flowable common attributes with default "hovering" gradient
@@ -108,22 +125,26 @@ public class MainScript : MonoBehaviour {
                     flow_textures[i, mat] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
                     flow_textures[i, mat].useMipMap = false;
                     flow_textures[i, mat].autoGenerateMips = false;
+                    flow_textures[i, mat].wrapMode = TextureWrapMode.Repeat;
                     flow_textures[i, mat].filterMode = FilterMode.Point;
-                }
 
-                flow_materials[mat] = new Material(flow_material);
-                flow_materials[mat].SetTexture("_HeightTex", height_texture);
-                flow_materials[mat].SetFloat("_TexelWidth", 1.0f / width);
-                flow_materials[mat].SetFloat("_TexelHeight", 1.0f / height);
-                flow_materials[mat].SetFloat("_NumElements", (float)flows.size + (float)solids.size);
-                flow_materials[mat].SetFloat("_FlowDivisor", 5.0f + (float)flows.size);
-                flow_materials[mat].SetFloat("_FlowGradient", 0);
+                    flow_materials[i, mat] = new Material(flow_material);
+                    flow_materials[i, mat].SetTexture("_HeightTex", height_texture);
+                    flow_materials[i, mat].SetTexture("_HeatTex", heat_textures[i]);
+                    flow_materials[i, mat].SetFloat("_TexelWidth", 1.0f / width);
+                    flow_materials[i, mat].SetFloat("_TexelHeight", 1.0f / height);
+                    flow_materials[i, mat].SetFloat("_FlowDivisor", 5.0f);
+                    flow_materials[i, mat].SetFloat("_FlowGradient", 0);
+                }
             }
 
             // Water
             {
-                flow_materials[(int)flows.water].SetFloat("_FlowDivisor", 5.0f + (float)flows.size + 5.0f);
-                flow_materials[(int)flows.water].SetFloat("_FlowGradient", -1.0f / height);
+                for (int i = 0; i < 2; i++)
+                {
+                    flow_materials[i, (int)flows.water].SetFloat("_FlowDivisor", 10.0f);
+                    flow_materials[i, (int)flows.water].SetFloat("_FlowGradient", -1.0f / height);
+                }
 
                 Texture2D initial_data = new Texture2D(width, height);
                 for (int y = 0; y < height; y++)
@@ -141,7 +162,11 @@ public class MainScript : MonoBehaviour {
 
             // Steam
             {
-                flow_materials[(int)flows.steam].SetFloat("_FlowGradient", 1.0f / height);
+                for (int i = 0; i < 2; i++)
+                {
+                    flow_materials[i, (int)flows.steam].SetFloat("_FlowDivisor", 4.5f);
+                    flow_materials[i, (int)flows.steam].SetFloat("_FlowGradient", 1.0f / height);
+                }
 
                 Texture2D initial_data = new Texture2D(width, height);
                 for (int y = 0; y < height; y++)
@@ -159,8 +184,11 @@ public class MainScript : MonoBehaviour {
 
             // Lava
             {
-                flow_materials[(int)flows.lava].SetFloat("_FlowDivisor", 25.0f + (float)flows.size + 5.0f);
-                flow_materials[(int)flows.lava].SetFloat("_FlowGradient", -1.0f / height);
+                for (int i = 0; i < 2; i++)
+                {
+                    flow_materials[i, (int)flows.lava].SetFloat("_FlowDivisor", 30.0f);
+                    flow_materials[i, (int)flows.lava].SetFloat("_FlowGradient", -1.0f / height);
+                }
 
                 Texture2D initial_data = new Texture2D(width, height);
                 for (int y = 0; y < height; y++)
@@ -213,16 +241,11 @@ public class MainScript : MonoBehaviour {
                 Graphics.Blit(initial_data, solid_textures[1, (int)solids.dirt]);
             }
         }
-        
-        // Heat
+
+        // Heat materials
         {
             for (int i = 0; i < 2; i++)
             {
-                heat_textures[i] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
-                heat_textures[i].useMipMap = false;
-                heat_textures[i].autoGenerateMips = false;
-                heat_textures[i].filterMode = FilterMode.Point;
-
                 heat_material_flip_flops[i] = new Material(heat_material);
                 heat_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
                 heat_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
@@ -254,7 +277,6 @@ public class MainScript : MonoBehaviour {
                 height_material_flip_flops[i] = new Material(height_material);
                 height_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
                 height_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
-                height_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size + (float)solids.size);
                 height_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
                 height_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
                 height_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
@@ -279,7 +301,6 @@ public class MainScript : MonoBehaviour {
                 world_material_flip_flops[i] = new Material(world_material);
                 world_material_flip_flops[i].SetFloat("_TexelWidth", 1.0f / width);
                 world_material_flip_flops[i].SetFloat("_TexelHeight", 1.0f / height);
-                world_material_flip_flops[i].SetFloat("_NumElements", (float)flows.size);
                 world_material_flip_flops[i].SetTexture("_WaterTex", flow_textures[i, (int)flows.water]);
                 world_material_flip_flops[i].SetTexture("_SteamTex", flow_textures[i, (int)flows.steam]);
                 world_material_flip_flops[i].SetTexture("_LavaTex", flow_textures[i, (int)flows.lava]);
@@ -288,12 +309,13 @@ public class MainScript : MonoBehaviour {
             }
         }
     }
-	
-	// Update is called once per frame
-	/// <summary>
+
+    // Update is called once per frame
+    /// <summary>
     /// 
     /// </summary>
-    void Update () {
+    void Update()
+    {
 
         // Convert mouse position to Grid Coordinates
         Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -305,9 +327,9 @@ public class MainScript : MonoBehaviour {
         foreach (char c in Input.inputString)
         {
             // Numbers select elements
-            if('0' <= c && c < '0' + (int)element_selection.size)
+            if ('0' <= c && c < '0' + (int)element_selection.size)
             {
-                if(c == '0')
+                if (c == '0')
                 {
                     selected_element = 0;
                     invert_selection = true;
@@ -339,7 +361,7 @@ public class MainScript : MonoBehaviour {
                 }
             }
         }
-          
+
         DebugText.text = pos_grid.ToString() + "\n" + element_selection_text;
 
         // On mouse clicks
@@ -388,8 +410,8 @@ public class MainScript : MonoBehaviour {
                                 {
                                     tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
                                         new Color(
-                                        Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 1f),
-                                        0f, 0f, 1f));
+                                        Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 0.5f),
+                                        0f, 0f, 0f));
                                 }
                             }
                         }
@@ -400,7 +422,7 @@ public class MainScript : MonoBehaviour {
                             tex.SetPixel(pos_grid.x, pos_grid.y,
                                         new Color(
                                         Mathf.Min(tex.GetPixel(pos_grid.x, pos_grid.y).r + 0.5f, 1f),
-                                        0f, 0f, 1f));
+                                        0f, 0f, 0f));
                         }
                     }
 
@@ -414,11 +436,11 @@ public class MainScript : MonoBehaviour {
                                 tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
                                     new Color(
                                     Mathf.Max(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r - 0.3f, 0f),
-                                    0f, 0f, 1f));
+                                    0f, 0f, 0f));
                             }
                         }
                     }
-                    
+
                     tex.Apply();
 
                     // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
@@ -450,34 +472,47 @@ public class MainScript : MonoBehaviour {
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
         }
-        
+
+
+
         // Make the simulation run a lot faster than the framerate
         float time_step = 1f / update_rate;
         for (float i = 0; i < Time.deltaTime; i += time_step)
         {
-            // Flip the buffer
-            flip_flop = 1 - flip_flop;
+            // Keep track of what index is changing
+            int prev = flip_flop;
+            int next = 1 - flip_flop;
 
             // Run the shaders for flowable elements
-            for (int j = 0; j < (int)flows.size; j++)
+            for (int flowable_element = 0; flowable_element < (int)flows.size; flowable_element++)
             {
-                Graphics.Blit(flow_textures[1 - flip_flop, j], flow_textures[flip_flop, j], flow_materials[j]);
+                Graphics.Blit(flow_textures[prev, flowable_element],
+                    flow_textures[next, flowable_element],
+                    flow_materials[prev, flowable_element]);
             }
 
             // Update the solid elements
-            for (int j = 0; j < (int)solids.size; j++)
+            for (int solid_element = 0; solid_element < (int)solids.size; solid_element++)
             {
-                Graphics.Blit(solid_textures[1 - flip_flop, j], solid_textures[flip_flop, j]); 
+                Graphics.Blit(solid_textures[prev, solid_element],
+                    solid_textures[next, solid_element]);
             }
 
             // Write the new height maps for use next update
-            Graphics.Blit(null, height_texture, height_material_flip_flops[flip_flop]);
-            
+            Graphics.Blit(null,
+                height_texture,
+                height_material_flip_flops[prev]);
+
             // Run the heat shader to distribute heat based on flow
-            Graphics.Blit(heat_textures[1 - flip_flop], heat_textures[flip_flop], heat_material_flip_flops[flip_flop]);
+            Graphics.Blit(heat_textures[prev],
+                heat_textures[next],
+                heat_material_flip_flops[prev]);
+
+            // Flip the buffer
+            flip_flop = 1 - flip_flop;
         }
 
         // Use Blit to run the world shader (which references the water and dirt textures) and save the result to render_texture
-        Graphics.Blit(null, world_texture, world_material_flip_flops[flip_flop]);
+        Graphics.Blit(null, world_texture, world_material_flip_flops[1 - flip_flop]);
     }
 }
