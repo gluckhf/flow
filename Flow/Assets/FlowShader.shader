@@ -55,7 +55,7 @@
 			
 			float getFlow(float myHeight, float myAmount, float theirHeight, float theirAmount)
 			{
-				float small = 0.00001;
+				float small = 0.000001;
 				
 				// Calculate how much will flow in percentage
 				// e.g. 1/3 of my height should flow out
@@ -76,7 +76,7 @@
 
 			float getHeat(float flow, float myHeat, float myHeight, float theirHeat, float theirHeight)
 			{
-				float small = 0.00001;
+				float small = 0.000001;
 
 				// Calculate how much will flow in percentage of the total height
 				// One of these will be negative, or both zero if equal heights
@@ -95,6 +95,8 @@
 
 			float4 frag (v2f i) : SV_Target
 			{
+				float small = 0.000001;
+
 				// sample this texture pixels
 				float4 this_pixel = tex2D(_MainTex, i.uv);
 				float4 this_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
@@ -149,6 +151,11 @@
 								
 				// This pixel red amount is the sum of the flows
 				this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;
+
+				if(this_pixel.r < small)
+				{
+					this_pixel.r = 0;
+				}
 
 				return this_pixel;
 			}

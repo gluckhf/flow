@@ -6,6 +6,7 @@
 		_SteamTex ("SteamTex", 2D) = "white" {}
 		_LavaTex ("LavaTex", 2D) = "white" {}
 		_DirtTex ("DirtTex", 2D) = "white" {}
+		_CopperTex ("CopperTex", 2D) = "white" {}
 		_HeatTex ("HeatTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
@@ -40,6 +41,7 @@
 			sampler2D _SteamTex;
 			sampler2D _LavaTex;
 			sampler2D _DirtTex;
+			sampler2D _CopperTex;
 			sampler2D _HeatTex;
 			float _TexelWidth;
 			float _TexelHeight;
@@ -59,11 +61,13 @@
 				float steam = pow(tex2D(_SteamTex, i.uv).r, 0.3);
 				float lava = pow(tex2D(_LavaTex, i.uv).r, 0.3);
 				float dirt = pow(tex2D(_DirtTex, i.uv).r, 0.3);
+				float copper = pow(tex2D(_CopperTex, i.uv).r, 0.3);
 				float heat = tex2D(_HeatTex, i.uv).r;
+				float temperature = tex2D(_HeatTex, i.uv).a;
 
-				float r = dirt/1.5 + steam + lava;
-				float g = dirt/3.0 + steam;
-				float b = water*3.0 + steam;
+				float r = copper*0.66 + dirt*0.56 + steam + lava;
+				float g = copper*0.33 + dirt*0.34 + steam;
+				float b =               dirt*0.23 + steam +       water*3.0;
 
 				// Color
 				if(0)
@@ -75,17 +79,15 @@
 					1);
 				}
 
-				// B&W + Heat
+				float output = temperature;
+
+				// B&W + output
 				{
 					float avg = (r+g+b) / 3.0;
 				
-					if(heat > 1.0)
-					{
-						return float4(1, 0, 0, 1);
-					}
 					return float4(
-					avg + heat, 
-					avg + heat, 
+					min(1.0, avg + output), 
+					min(1.0, avg + output),
 					avg, 
 					1);
 				}

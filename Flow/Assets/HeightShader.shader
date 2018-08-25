@@ -6,6 +6,7 @@
 		_SteamTex ("SteamTex", 2D) = "white" {}
 		_LavaTex ("LavaTex", 2D) = "white" {}
 		_DirtTex ("DirtTex", 2D) = "white" {}
+		_CopperTex ("CopperTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
 	}
@@ -39,6 +40,7 @@
 			sampler2D _SteamTex;
 			sampler2D _LavaTex;
 			sampler2D _DirtTex;
+			sampler2D _CopperTex;
 			float _TexelWidth;
 			float _TexelHeight;
 
@@ -57,8 +59,9 @@
 				float4 steam = tex2D(_SteamTex, i.uv);
 				float4 lava = tex2D(_LavaTex, i.uv);
 				float4 dirt = tex2D(_DirtTex, i.uv);
+				float4 copper = tex2D(_CopperTex, i.uv);
 
-				return float4(dirt.r + steam.r + lava.r + water.r, 0, 0, 0);
+				return float4(dirt.r + steam.r + lava.r + water.r + copper.r, 0, 0, 0);
 			}
 			ENDCG
 		}

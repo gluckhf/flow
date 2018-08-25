@@ -17,7 +17,7 @@ public class MainScript : MonoBehaviour
     RenderTexture[] heat_textures = new RenderTexture[2];
 
     // Heat flow
-    public Material temperature_material;
+    public Material heat2_material;
 
     // World compositing
     public Material world_material;
@@ -40,6 +40,7 @@ public class MainScript : MonoBehaviour
     private enum solids
     {
         dirt = 0,
+        copper,
         size
     }
 
@@ -64,6 +65,7 @@ public class MainScript : MonoBehaviour
         steam,
         lava,
         dirt,
+        copper,
         heat,
         size
     }
@@ -235,11 +237,31 @@ public class MainScript : MonoBehaviour
                 }
                 initial_data.Apply();
                 Graphics.Blit(initial_data, solid_textures[(int)solids.dirt]);
-                Graphics.Blit(initial_data, solid_textures[(int)solids.dirt]);
+            }
+
+            // Copper
+            {
+                Texture2D initial_data = new Texture2D(width, height);
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (y == 0 || y == 16 || y == height - 1 || x == 0 || x == 16 || x == width - 1)
+                        {
+                            initial_data.SetPixel(x, y, new Color(1, 0, 0));
+                        }
+                        else
+                        {
+                            initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                        }
+                    }
+                }
+                initial_data.Apply();
+                Graphics.Blit(initial_data, solid_textures[(int)solids.copper]);
             }
         }
 
-        // Heat material
+        // Heat material (flow with elements)
         {
             heat_material = new Material(heat_material);
             heat_material.SetFloat("_TexelWidth", 1.0f / width);
@@ -249,18 +271,19 @@ public class MainScript : MonoBehaviour
             heat_material.SetTexture("_LavaTex", flow_textures[0, (int)flows.lava]);
         }
 
-        // Temperature material
+        // Heat2 material (flow between elements)
         {
-            temperature_material = new Material(temperature_material);
-            temperature_material.SetFloat("_TexelWidth", 1.0f / width);
-            temperature_material.SetFloat("_TexelHeight", 1.0f / height);
-            temperature_material.SetFloat("_FlowDivisor", 5.0f);
-            temperature_material.SetTexture("_HeatTex", heat_textures[0]);
-            temperature_material.SetTexture("_WaterTex", flow_textures[0, (int)flows.water]);
-            temperature_material.SetTexture("_SteamTex", flow_textures[0, (int)flows.steam]);
-            temperature_material.SetTexture("_LavaTex", flow_textures[0, (int)flows.lava]);
-            temperature_material.SetTexture("_DirtTex", solid_textures[(int)solids.dirt]);
-            temperature_material.SetTexture("_HeightTex", height_texture);
+            heat2_material = new Material(heat2_material);
+            heat2_material.SetFloat("_TexelWidth", 1.0f / width);
+            heat2_material.SetFloat("_TexelHeight", 1.0f / height);
+            heat2_material.SetFloat("_FlowDivisor", 5.0f);
+            heat2_material.SetTexture("_HeatTex", heat_textures[0]);
+            heat2_material.SetTexture("_WaterTex", flow_textures[0, (int)flows.water]);
+            heat2_material.SetTexture("_SteamTex", flow_textures[0, (int)flows.steam]);
+            heat2_material.SetTexture("_LavaTex", flow_textures[0, (int)flows.lava]);
+            heat2_material.SetTexture("_DirtTex", solid_textures[(int)solids.dirt]);
+            heat2_material.SetTexture("_CopperTex", solid_textures[(int)solids.copper]);
+            heat2_material.SetTexture("_HeightTex", height_texture);
         }
 
         // Set up height map
@@ -272,6 +295,7 @@ public class MainScript : MonoBehaviour
             height_material.SetTexture("_SteamTex", flow_textures[0, (int)flows.steam]);
             height_material.SetTexture("_LavaTex", flow_textures[0, (int)flows.lava]);
             height_material.SetTexture("_DirtTex", solid_textures[(int)solids.dirt]);
+            height_material.SetTexture("_CopperTex", solid_textures[(int)solids.copper]);
 
             Graphics.Blit(null, height_texture, height_material);
         }
@@ -293,6 +317,7 @@ public class MainScript : MonoBehaviour
             world_material.SetTexture("_SteamTex", flow_textures[0, (int)flows.steam]);
             world_material.SetTexture("_LavaTex", flow_textures[0, (int)flows.lava]);
             world_material.SetTexture("_DirtTex", solid_textures[(int)solids.dirt]);
+            world_material.SetTexture("_CopperTex", solid_textures[(int)solids.copper]);
             world_material.SetTexture("_HeatTex", heat_textures[0]);
         }
     }
@@ -367,6 +392,9 @@ public class MainScript : MonoBehaviour
                         case element_selection.dirt:
                             RenderTexture.active = solid_textures[(int)solids.dirt];
                             break;
+                        case element_selection.copper:
+                            RenderTexture.active = solid_textures[(int)solids.copper];
+                            break;
                         case element_selection.water:
                             RenderTexture.active = flow_textures[0, (int)flows.water];
                             break;
@@ -440,6 +468,9 @@ public class MainScript : MonoBehaviour
                         case element_selection.dirt:
                             Graphics.Blit(tex, solid_textures[(int)solids.dirt]);
                             break;
+                        case element_selection.copper:
+                            Graphics.Blit(tex, solid_textures[(int)solids.copper]);
+                            break;
                         case element_selection.water:
                             Graphics.Blit(tex, flow_textures[0, (int)flows.water]);
                             break;
@@ -502,7 +533,7 @@ public class MainScript : MonoBehaviour
             // Run the heat flow shader to distribute heat based on temperature differences
             Graphics.Blit(null,
                 heat_textures[1],
-                temperature_material);
+                heat2_material);
 
             // Keep the master texture in index 0
             Graphics.Blit(heat_textures[1],

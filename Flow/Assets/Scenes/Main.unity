@@ -284,8 +284,7 @@ MonoBehaviour:
   mesh_renderer: {fileID: 592761663}
   height_material: {fileID: 2100000, guid: 8d66768396142cf49a004f835a9b3bf9, type: 2}
   heat_material: {fileID: 2100000, guid: f70be47822e8b1741b6cf7a801d92023, type: 2}
-  temperature_material: {fileID: 2100000, guid: 92b9d84db1cf12143b624fb4b58ab129,
-    type: 2}
+  heat2_material: {fileID: 2100000, guid: f99258b3fb4307042a1401ac64ac00f2, type: 2}
   world_material: {fileID: 2100000, guid: d5bec54ce1397ab4998dadedd0fcdf3b, type: 2}
   flow_material: {fileID: 2100000, guid: 54d27fced0805fd4b9b56ea08e028ac9, type: 2}
   DebugText: {fileID: 609288946}
