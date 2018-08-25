@@ -170,7 +170,7 @@ public class MainScript : MonoBehaviour
 
             // Steam
             {
-                flow_materials[(int)flows.steam].SetFloat("_FlowDivisor", 4.5f);
+                flow_materials[(int)flows.steam].SetFloat("_FlowDivisor", 6.0f);
                 flow_materials[(int)flows.steam].SetFloat("_FlowGradient", 1.0f / height);
 
                 Texture2D initial_data = new Texture2D(width, height);
@@ -367,7 +367,22 @@ public class MainScript : MonoBehaviour
             }
         }
 
-        DebugText.text = pos_grid.ToString() + "\n" + element_selection_text;
+
+        string additional_text = "";
+
+        // Additional text
+        {
+            RenderTexture.active = heat_textures[0];
+            // Create a new Texture2D and read the RenderTexture image into it
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+            var pixel = tex.GetPixel(pos_grid.x, pos_grid.y);
+
+            additional_text = pixel.a.ToString();
+        }
+
+        DebugText.text = pos_grid.ToString() + "\n" + additional_text + "\n" + element_selection_text;
 
         // On mouse clicks
         if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
@@ -405,7 +420,7 @@ public class MainScript : MonoBehaviour
                     // Create a new Texture2D and read the RenderTexture image into it
                     Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
                     tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-
+                    
                     // Don't place all inverted elements
                     if (i == selected_element)
                     {
@@ -453,7 +468,7 @@ public class MainScript : MonoBehaviour
                     }
 
                     tex.Apply();
-
+                    
                     // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
                     // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
                     switch ((element_selection)i)
