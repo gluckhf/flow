@@ -367,7 +367,21 @@ public class MainScript : MonoBehaviour
             }
         }
 
-        DebugText.text = pos_grid.ToString() + "\n" + element_selection_text;
+
+        // Get some values
+        string output_values_text = "";
+        {
+            RenderTexture.active = heat_textures[0];
+            Texture2D output_values_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+            output_values_tex.ReadPixels(new Rect(0, 0, output_values_tex.width, output_values_tex.height), 0, 0);
+
+            var output_values_pixel = output_values_tex.GetPixel(pos_grid.x, pos_grid.y);
+
+            output_values_text = output_values_pixel.a.ToString();
+            
+        }
+
+        DebugText.text = pos_grid.ToString() + "\n" + output_values_text + "\n" + element_selection_text;
 
         // On mouse clicks
         if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
@@ -379,26 +393,48 @@ public class MainScript : MonoBehaviour
             {
                 if ((i != selected_element) == invert_selection)
                 {
+                    double target_temperature = 0;
+                    double my_capacity = 0;
+
+                    // Hack, to fix:
+                    double cap_scaling = 4.1813;
+                    double cap_water = 4.1813 / cap_scaling; // Water
+                    double cap_steam = 2.0800 / cap_scaling; // Water (steam)
+                    double cap_lava = 1.5600 / cap_scaling; // Molten salt
+                    double cap_dirt = 0.8000 / cap_scaling; // Soil
+                    double cap_copper = 0.3850 / cap_scaling; // Copper
+
                     // Set the selected RenderTexture as the active one
                     switch ((element_selection)i)
                     {
                         case element_selection.dirt:
                             RenderTexture.active = solid_textures[(int)solids.dirt];
+                            target_temperature = 0.2;
+                            my_capacity = cap_dirt;
                             break;
                         case element_selection.copper:
                             RenderTexture.active = solid_textures[(int)solids.copper];
+                            target_temperature = 0.2;
+                            my_capacity = cap_copper;
                             break;
                         case element_selection.water:
                             RenderTexture.active = flow_textures[0, (int)flows.water];
+                            target_temperature = 0.1;
+                            my_capacity = cap_water;
                             break;
                         case element_selection.steam:
                             RenderTexture.active = flow_textures[0, (int)flows.steam];
+                            target_temperature = 0.4;
+                            my_capacity = cap_steam;
                             break;
                         case element_selection.lava:
                             RenderTexture.active = flow_textures[0, (int)flows.lava];
+                            target_temperature = 0.8;
+                            my_capacity = cap_lava;
                             break;
                         case element_selection.heat:
                             RenderTexture.active = heat_textures[0];
+                            target_temperature = 0;
                             break;
                     }
 
@@ -406,6 +442,11 @@ public class MainScript : MonoBehaviour
                     Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
                     tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
 
+                    // Also read the heat texture to add the default heat
+                    RenderTexture.active = heat_textures[0];
+                    Texture2D additional_heat_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+                    additional_heat_tex.ReadPixels(new Rect(0, 0, additional_heat_tex.width, additional_heat_tex.height), 0, 0);
+                    
                     // Don't place all inverted elements
                     if (i == selected_element)
                     {
@@ -416,11 +457,17 @@ public class MainScript : MonoBehaviour
                             {
                                 for (int y = -1; y < 1; y++)
                                 {
-                                    var temp = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
+                                    var old_pixel = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
+                                    var added_amount = Mathf.Max(Mathf.Min(old_pixel.r + 0.1f, 0.5f) - old_pixel.r, 0);
                                     tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
-                                        new Color(
-                                        Mathf.Min(temp.r + 0.3f, 0.5f),
-                                        temp.g, temp.b, temp.a));
+                                        new Color(added_amount + old_pixel.r,
+                                        old_pixel.g, old_pixel.b, old_pixel.a));
+                                    
+                                    var old_heat_pixel = additional_heat_tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
+                                    additional_heat_tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
+                                        new Color((float)(added_amount * target_temperature * my_capacity // this is heat added
+                                        + old_heat_pixel.r),
+                                        old_heat_pixel.g, old_heat_pixel.b, old_heat_pixel.a));
                                 }
                             }
                         }
@@ -428,11 +475,17 @@ public class MainScript : MonoBehaviour
                         // Place one
                         if (Input.GetMouseButton(2))
                         {
-                            var temp = tex.GetPixel(pos_grid.x, pos_grid.y);
+                            var old_pixel = tex.GetPixel(pos_grid.x, pos_grid.y);
+                            var added_amount = Mathf.Max(Mathf.Min(old_pixel.r + 0.5f, 1.0f) - old_pixel.r, 0);
                             tex.SetPixel(pos_grid.x, pos_grid.y,
-                                new Color(
-                                Mathf.Min(temp.r + 0.5f, 1.0f),
-                                temp.g, temp.b, temp.a));
+                                new Color(added_amount + old_pixel.r,
+                                old_pixel.g, old_pixel.b, old_pixel.a));
+
+                            var old_heat_pixel = additional_heat_tex.GetPixel(pos_grid.x, pos_grid.y);
+                            additional_heat_tex.SetPixel(pos_grid.x, pos_grid.y,
+                                new Color((float)(added_amount * target_temperature * my_capacity // this is heat added
+                                + old_heat_pixel.r),
+                                old_heat_pixel.g, old_heat_pixel.b, old_heat_pixel.a));
                         }
                     }
 
@@ -453,6 +506,7 @@ public class MainScript : MonoBehaviour
                     }
 
                     tex.Apply();
+                    additional_heat_tex.Apply();
 
                     // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
                     // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
@@ -460,24 +514,29 @@ public class MainScript : MonoBehaviour
                     {
                         case element_selection.dirt:
                             Graphics.Blit(tex, solid_textures[(int)solids.dirt]);
+                            Graphics.Blit(additional_heat_tex, heat_textures[0]);
                             break;
                         case element_selection.copper:
                             Graphics.Blit(tex, solid_textures[(int)solids.copper]);
+                            Graphics.Blit(additional_heat_tex, heat_textures[0]);
                             break;
                         case element_selection.water:
                             Graphics.Blit(tex, flow_textures[0, (int)flows.water]);
+                            Graphics.Blit(additional_heat_tex, heat_textures[0]);
                             break;
                         case element_selection.steam:
                             Graphics.Blit(tex, flow_textures[0, (int)flows.steam]);
+                            Graphics.Blit(additional_heat_tex, heat_textures[0]);
                             break;
                         case element_selection.lava:
                             Graphics.Blit(tex, flow_textures[0, (int)flows.lava]);
+                            Graphics.Blit(additional_heat_tex, heat_textures[0]);
                             break;
                         case element_selection.heat:
                             Graphics.Blit(tex, heat_textures[0]);
                             break;
                     }
-
+                    
                     // Destroy the texture to stop memory leaks
                     UnityEngine.Object.Destroy(tex);
                 }
