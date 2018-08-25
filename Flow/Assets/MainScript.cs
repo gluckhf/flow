@@ -18,7 +18,22 @@ public class MainScript : MonoBehaviour
 
     // Heat flow
     public Material heat2_material;
+    
+    // Transitions
+    private enum transition
+    {
+        water_to_steam = 0,
+        size
+    }
 
+    // State change
+    public Material state_material;
+    private Material[] state_materials = new Material[(int)transition.size];
+
+    // Pair state change for going cold
+    public Material pair_state_material;
+    private Material[] pair_state_materials = new Material[(int)transition.size];
+    
     // World compositing
     public Material world_material;
     RenderTexture world_texture;
@@ -31,6 +46,7 @@ public class MainScript : MonoBehaviour
         lava,
         size
     }
+       
 
     public Material flow_material;
     private Material[] flow_materials = new Material[(int)flows.size];
@@ -279,6 +295,22 @@ public class MainScript : MonoBehaviour
             heat2_material.SetTexture("_HeightTex", height_texture);
         }
 
+        // State material (change of state of element / change of elements)
+        {
+            state_materials[(int)transition.water_to_steam] = new Material(state_material);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TexelWidth", 1.0f / width);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TexelHeight", 1.0f / height);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionHotTemperature", 0.5f);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionColdTemperature", 0.1f);
+            state_materials[(int)transition.water_to_steam].SetTexture("_HeatTex", heat_textures[0]);
+            state_materials[(int)transition.water_to_steam].SetTexture("_InputTex", flow_textures[0, (int)flows.water]);
+
+            pair_state_materials[(int)transition.water_to_steam] = new Material(pair_state_material);
+            pair_state_materials[(int)transition.water_to_steam].SetFloat("_TexelWidth", 1.0f / width);
+            pair_state_materials[(int)transition.water_to_steam].SetFloat("_TexelHeight", 1.0f / height);
+            pair_state_materials[(int)transition.water_to_steam].SetTexture("_InputTex", flow_textures[0, (int)flows.steam]);
+        }
+        
         // Set up height map
         {
             height_material = new Material(height_material);
@@ -543,6 +575,22 @@ public class MainScript : MonoBehaviour
             // Keep the master texture in index 0
             Graphics.Blit(heat_textures[1],
                 heat_textures[0]);
+
+            // Do state change for water to steam
+            Graphics.Blit(flow_textures[0, (int)flows.steam], flow_textures[1, (int)flows.steam],
+                state_materials[(int)transition.water_to_steam]);
+
+            // Keep the master texture in index 0
+            Graphics.Blit(flow_textures[1, (int)flows.steam],
+                flow_textures[0, (int)flows.steam]);
+
+            // Do paired state change for steam to water
+            Graphics.Blit(flow_textures[0, (int)flows.water], flow_textures[1, (int)flows.water],
+                pair_state_materials[(int)transition.water_to_steam]);
+
+            // Keep the master texture in index 0
+            Graphics.Blit(flow_textures[1, (int)flows.water],
+                flow_textures[0, (int)flows.water]);
         }
 
         if(Input.GetKeyDown(KeyCode.Space))
