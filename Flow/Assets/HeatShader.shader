@@ -103,6 +103,16 @@
 
 				float small = 0.001;
 
+
+				float in_n = 2.0 * (water.g - 0.5) + 2.0 * (steam.g - 0.5);
+				float in_e = 2.0 * (water.b - 0.5) + 2.0 * (steam.b - 0.5);;
+				float in_s = -(2.0 * (water_s.g - 0.5)) -(2.0 * (steam_s.g - 0.5));
+				float in_w = -(2.0 * (water_w.b - 0.5)) -(2.0 * (steam_w.b - 0.5));
+
+				this_pixel.r = max(this_pixel.r + in_n + in_e + in_s + in_w, 0);
+
+
+
 				/*
 				// Calculate the heat flows inward in each direction
 				float flow_in_east = 

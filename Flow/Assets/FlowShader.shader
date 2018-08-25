@@ -57,7 +57,7 @@
 			{
 				float small = 0.00001;
 				
-				// Calculate how much will flow out in percentage
+				// Calculate how much will flow in percentage
 				// e.g. 1/3 of my height should flow out
 				// One of these will be negative, or both zero if equal heights
 				float percent_flow_in = (theirHeight - myHeight) / max(theirHeight, small);
@@ -72,6 +72,25 @@
 
 				// Scale by the flow divisor
 				return flow_in_final / _FlowDivisor;
+			}
+
+			float getHeat(float flow, float myHeat, float myHeight, float theirHeat, float theirHeight)
+			{
+				float small = 0.00001;
+
+				// Calculate how much will flow in percentage of the total height
+				// One of these will be negative, or both zero if equal heights
+				float percent_flow_in = max(flow / max(theirHeight, small), 0);
+				float percent_flow_out = max(-flow / max(myHeight, small), 0);
+
+				// Figure out how much will actually flow
+				float heat_amount_in = percent_flow_in * max(theirHeat, 0);
+				float heat_amount_out = percent_flow_out * max(myHeat, 0);
+
+				// Use a clever statement to select between the in/out with correct sign
+				float heat_in_final = max(heat_amount_in, 0) + min(-heat_amount_out, 0);
+
+				return heat_in_final;
 			}
 
 			float4 frag (v2f i) : SV_Target
@@ -120,17 +139,14 @@
 									   height_pixel_w.r,
 									   this_pixel_w.r);
 
-									   /*
+				
 				// For implementation of heat, keep track of the percentage heat flow
 				// GREEN = INWARD NORTH
-				this_pixel.g = 0.5 + 0.5 * (max(flow_e / this_pixel_e.r, 0) + min(flow_e / this_pixel.r, 0));
-				// BLUE = INWARD SOUTH
-				this_pixel.b = 0.5 + 0.5 * (max(flow_w / this_pixel_w.r, 0) + min(flow_w / this_pixel.r, 0));
+				this_pixel.g = 0.5 + 0.5 * getHeat(flow_n, heat_pixel.r, height_pixel.r, heat_pixel_n.r, height_pixel_n.r);
 
-				// Keep track of the old amount of stuff in this cell
-				this_pixel.a = this_pixel.r;
-				*/
-
+				// BLUE = INWARD EAST
+				this_pixel.b = 0.5 + 0.5 * getHeat(flow_e, heat_pixel.r, height_pixel.r, heat_pixel_e.r, height_pixel_e.r);
+								
 				// This pixel red amount is the sum of the flows
 				this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;
 

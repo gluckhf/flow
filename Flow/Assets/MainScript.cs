@@ -408,10 +408,11 @@ public class MainScript : MonoBehaviour
                             {
                                 for (int y = -1; y < 1; y++)
                                 {
+                                    var temp = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
                                     tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
                                         new Color(
-                                        Mathf.Min(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r + 0.3f, 0.5f),
-                                        0f, 0f, 0f));
+                                        Mathf.Min(temp.r + 0.3f, 0.5f),
+                                        temp.g, temp.b, temp.a));
                                 }
                             }
                         }
@@ -419,10 +420,11 @@ public class MainScript : MonoBehaviour
                         // Place one
                         if (Input.GetMouseButton(2))
                         {
+                            var temp = tex.GetPixel(pos_grid.x, pos_grid.y);
                             tex.SetPixel(pos_grid.x, pos_grid.y,
-                                        new Color(
-                                        Mathf.Min(tex.GetPixel(pos_grid.x, pos_grid.y).r + 0.5f, 1f),
-                                        0f, 0f, 0f));
+                                new Color(
+                                Mathf.Min(temp.r + 0.5f, 1.0f),
+                                temp.g, temp.b, temp.a));
                         }
                     }
 
@@ -433,10 +435,11 @@ public class MainScript : MonoBehaviour
                         {
                             for (int y = -1; y < 1; y++)
                             {
+                                var temp = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
                                 tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
                                     new Color(
-                                    Mathf.Max(tex.GetPixel(pos_grid.x + x, pos_grid.y + y).r - 0.3f, 0f),
-                                    0f, 0f, 0f));
+                                    Mathf.Max(temp.r - 0.3f, 0.0f),
+                                    temp.g, temp.b, temp.a));
                             }
                         }
                     }

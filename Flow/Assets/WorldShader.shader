@@ -66,7 +66,7 @@
 				float b = water*3.0 + steam;
 
 				// Color
-				if(1)
+				if(0)
 				{
 					return float4(
 					r, 
