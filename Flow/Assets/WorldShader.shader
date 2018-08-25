@@ -10,6 +10,7 @@
 		_HeatTex ("HeatTex", 2D) = "white" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+		_Highlite ("Highlite", int) = 0
 	}
 	SubShader
 	{
@@ -45,6 +46,7 @@
 			sampler2D _HeatTex;
 			float _TexelWidth;
 			float _TexelHeight;
+			int _Highlite;
 
 			v2f vert (appdata v)
 			{
@@ -70,7 +72,7 @@
 				float b =               dirt*0.23 + steam +       water*3.0;
 
 				// Color
-				if(0)
+				if(_Highlite == 0)
 				{
 					return float4(
 					r, 
@@ -79,7 +81,14 @@
 					1);
 				}
 
-				float output = temperature;
+				float output = 0;
+
+				if(_Highlite == 1) { output = water; }
+				if(_Highlite == 2) { output = steam; }
+				if(_Highlite == 3) { output = lava; }
+				if(_Highlite == 4) { output = dirt; }
+				if(_Highlite == 5) { output = copper; }
+				if(_Highlite == 6) { output = temperature; }
 
 				// B&W + output
 				{

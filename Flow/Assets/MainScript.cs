@@ -225,7 +225,7 @@ public class MainScript : MonoBehaviour
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        if (y == 0 || y == 16 || y == height - 1 || x == 0 || x == 16 || x == width - 1)
+                        if ((y >= 16 && y <= 32) || x == 16 || (x >= 32 && x < 36) || x == 48 || x == 64)
                         {
                             initial_data.SetPixel(x, y, new Color(1, 0, 0));
                         }
@@ -246,14 +246,7 @@ public class MainScript : MonoBehaviour
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        if (y == 0 || y == 16 || y == height - 1 || x == 0 || x == 16 || x == width - 1)
-                        {
-                            initial_data.SetPixel(x, y, new Color(1, 0, 0));
-                        }
-                        else
-                        {
-                            initial_data.SetPixel(x, y, new Color(0, 0, 0));
-                        }
+                        initial_data.SetPixel(x, y, new Color(0, 0, 0));
                     }
                 }
                 initial_data.Apply();
@@ -493,10 +486,7 @@ public class MainScript : MonoBehaviour
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
         }
-
-
-
-
+        
         // Make the simulation run a lot faster than the framerate
         float time_step = 1f / update_rate;
         for (float i = 0; i < Time.deltaTime; i += time_step)
@@ -540,6 +530,14 @@ public class MainScript : MonoBehaviour
                 heat_textures[0]);
         }
 
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            world_material.SetInt("_Highlite", selected_element);
+        }
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            world_material.SetInt("_Highlite", 0);
+        }
         // Use Blit to run the world shader (which references the water and dirt textures) and save the result to render_texture
         Graphics.Blit(null, world_texture, world_material);
     }
