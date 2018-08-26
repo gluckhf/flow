@@ -1,4 +1,4 @@
-﻿Shader "Flow/StateColdToHot"
+﻿Shader "Flow/State"
 {
 	Properties
 	{
@@ -8,8 +8,8 @@
 
 		_InputTex ("InputTex", 2D) = "black" {}
 		_HeatTex ("HeatTex", 2D) = "black" {}
-		_TransitionHotTemperature ("TransitionHotTemperature", float) = 0
-		_TransitionColdTemperature ("TransitionColdTemperature", float) = 0
+		_TransitionTemperature ("TransitionTemperature", float) = 0
+		_Hysteresis ("Hysteresis", float) = 0
 	}
 	SubShader
 	{
@@ -44,8 +44,8 @@
 
 			sampler2D _InputTex;
 			sampler2D _HeatTex;
-			float _TransitionHotTemperature;
-			float _TransitionColdTemperature;
+			float _TransitionTemperature;
+			float _Hysteresis;
 
 			v2f vert (appdata v)
 			{
@@ -59,30 +59,28 @@
 			{
 				float small = 0.000001;
 
-				// sample this texture pixels
+				// Sample this texture pixels
 				float4 this_pixel = tex2D(_MainTex, i.uv);
 				
-				// sample the input pixels
+				// Sample the input pixels
 				float4 input_pixel = tex2D(_InputTex, i.uv);
 				
-				// sample the heat pixels
+				// Sample the heat pixels
 				float4 heat_pixel = tex2D(_HeatTex, i.uv);
 
-				if(heat_pixel.a > _TransitionHotTemperature)
+				// Temperature greater than 0 indicated positive transition
+				// Temperature less than 0 indicated positive transition
+				if(_TransitionTemperature > 0 && heat_pixel.a >  _TransitionTemperature + _Hysteresis
+				|| _TransitionTemperature < 0 && heat_pixel.a < -_TransitionTemperature - _Hysteresis)
 				{
-					float amount_to_shift = input_pixel.r * 0.01;
-					this_pixel.r = this_pixel.r + amount_to_shift;
-					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
+					// Hot and heating or cold and cooling - this pixel is taking from the input
+					this_pixel.a += input_pixel.r * 0.01;
 				}
-				else if(heat_pixel.a < _TransitionColdTemperature)
+				else if(_TransitionTemperature > 0 && heat_pixel.a <  _TransitionTemperature - _Hysteresis
+				     || _TransitionTemperature < 0 && heat_pixel.a > -_TransitionTemperature + _Hysteresis)
 				{
-					float amount_to_shift = -this_pixel.r * 0.01;
-					this_pixel.r = this_pixel.r + amount_to_shift;
-					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
-				}
-				else
-				{
-					this_pixel.a = 0.5;
+					// Hot and cooling or cold and heat - this pixel is giving somewhere
+					 this_pixel.a -= this_pixel.r * 0.01;
 				}
 
 				return this_pixel;

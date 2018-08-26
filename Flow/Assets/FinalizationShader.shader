@@ -1,12 +1,10 @@
-﻿Shader "Flow/StateHotToCold"
+﻿Shader "Flow/Finalization"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
-
-		_InputTex ("InputTex", 2D) = "black" {}
 	}
 	SubShader
 	{
@@ -39,8 +37,6 @@
 			float _TexelWidth;
 			float _TexelHeight;
 
-			sampler2D _InputTex;
-
 			v2f vert (appdata v)
 			{
 				v2f o;
@@ -51,13 +47,12 @@
 			
 			float4 frag (v2f i) : SV_Target
 			{
-				// sample this texture pixels
+				// Sample this texture pixels
 				float4 this_pixel = tex2D(_MainTex, i.uv);
 				
-				// sample the input pixels
-				float4 input_pixel = tex2D(_InputTex, i.uv);
-				
-				this_pixel.r = this_pixel.r + 2.0 * (input_pixel.a - 0.5);
+				// Add the amount changed by state
+				this_pixel.r = this_pixel.r + this_pixel.a;
+				this_pixel.a = 0;
 
 				return this_pixel;
 			}

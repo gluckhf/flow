@@ -18,15 +18,18 @@ public class MainScript : MonoBehaviour
         lava,
         // Gasses
         steam,
+        // Then do state changes
+        water_to_steam,
+        steam_to_water,
+        // Then finalize amount of anything that could have changed
+        finalize_water,
+        finalize_steam,
         // Height needs to be updated after the flows
         height,
         // Heat movement depends on height and flow variables
         heat_movement,
         // Heat spread is calculated after movement
         heat_flow,
-        // Then do state changes
-        water_to_steam,
-        steam_to_water,
         // Then the world is drawn
         world,
         size
@@ -42,8 +45,8 @@ public class MainScript : MonoBehaviour
     public Material heat_material;
     public Material temperature_material;
     public Material world_material;
-    public Material state_cold_to_hot_material;
-    public Material state_hot_to_cold_material;  
+    public Material state_material;
+    public Material finalization_material;  
 
     // Provides a link to the debug text
     public Text DebugText;
@@ -147,15 +150,23 @@ public class MainScript : MonoBehaviour
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
         materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 5.0f);
 
-        materials[(int)material.water_to_steam] = new Material(state_cold_to_hot_material);
+        materials[(int)material.water_to_steam] = new Material(state_material);
         texture_source[(int)material.water_to_steam] = (int)material.steam;
-        materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 0.40f);
-        materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 0.30f);
+        materials[(int)material.water_to_steam].SetFloat("_TransitionTemperature", 0.35f);
+        materials[(int)material.water_to_steam].SetFloat("_Hysteresis", 0.05f);
         materials[(int)material.water_to_steam].SetTexture("_InputTex", textures[0, (int)material.water]);
-
-        materials[(int)material.steam_to_water] = new Material(state_hot_to_cold_material);
+        
+        materials[(int)material.steam_to_water] = new Material(state_material);
         texture_source[(int)material.steam_to_water] = (int)material.water;
+        materials[(int)material.steam_to_water].SetFloat("_TransitionTemperature", -0.35f);
+        materials[(int)material.steam_to_water].SetFloat("_Hysteresis", 0.05f);
         materials[(int)material.steam_to_water].SetTexture("_InputTex", textures[0, (int)material.steam]);
+
+        materials[(int)material.finalize_water] = new Material(finalization_material);
+        texture_source[(int)material.finalize_water] = (int)material.water;
+
+        materials[(int)material.finalize_steam] = new Material(finalization_material);
+        texture_source[(int)material.finalize_steam] = (int)material.steam;
 
         materials[(int)material.world] = new Material(world_material);
         texture_source[(int)material.world] = (int)material.world;
