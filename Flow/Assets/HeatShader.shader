@@ -2,12 +2,13 @@
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
-		_WaterTex ("WaterTex", 2D) = "white" {}
-		_SteamTex ("SteamTex", 2D) = "white" {}
-		_LavaTex ("LavaTex", 2D) = "white" {}
+		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+
+		_WaterTex ("WaterTex", 2D) = "black" {}
+		_SteamTex ("SteamTex", 2D) = "black" {}
+		_LavaTex ("LavaTex", 2D) = "black" {}
 	}
 	SubShader
 	{
@@ -36,12 +37,13 @@
 
 			// Must be redeclared from Properties to be able to be used
 			sampler2D _MainTex;
-			sampler2D _WaterTex;
-			sampler2D _SteamTex;
-			sampler2D _LavaTex;
 			float4 _MainTex_ST;
 			float _TexelWidth;
 			float _TexelHeight;
+
+			sampler2D _WaterTex;
+			sampler2D _SteamTex;
+			sampler2D _LavaTex;
 
 			v2f vert (appdata v)
 			{
@@ -87,6 +89,9 @@
 				float in_w = -(2.0 * (water_w.b - 0.5)) -(2.0 * (steam_w.b - 0.5))	-(2.0 * (lava_w.b - 0.5));
 
 				this_pixel.r = max(this_pixel.r + in_n + in_e + in_s + in_w, 0);
+				this_pixel.g = 0;
+				this_pixel.b = 0;
+				this_pixel.a = 0;
 
 				return this_pixel;
 			}

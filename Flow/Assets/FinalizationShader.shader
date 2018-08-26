@@ -1,16 +1,10 @@
-﻿Shader "Flow/Height"
+﻿Shader "Flow/Finalization"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
-
-		_WaterTex ("WaterTex", 2D) = "black" {}
-		_SteamTex ("SteamTex", 2D) = "black" {}
-		_LavaTex ("LavaTex", 2D) = "black" {}
-		_DirtTex ("DirtTex", 2D) = "black" {}
-		_CopperTex ("CopperTex", 2D) = "black" {}
 	}
 	SubShader
 	{
@@ -43,12 +37,6 @@
 			float _TexelWidth;
 			float _TexelHeight;
 
-			sampler2D _WaterTex;
-			sampler2D _SteamTex;
-			sampler2D _LavaTex;
-			sampler2D _DirtTex;
-			sampler2D _CopperTex;
-
 			v2f vert (appdata v)
 			{
 				v2f o;
@@ -59,14 +47,14 @@
 			
 			float4 frag (v2f i) : SV_Target
 			{
-				// Sum the heights of all elements
-				float4 water = tex2D(_WaterTex, i.uv);
-				float4 steam = tex2D(_SteamTex, i.uv);
-				float4 lava = tex2D(_LavaTex, i.uv);
-				float4 dirt = tex2D(_DirtTex, i.uv);
-				float4 copper = tex2D(_CopperTex, i.uv);
+				// Sample this texture pixels
+				float4 this_pixel = tex2D(_MainTex, i.uv);
+				
+				// Add the amount changed by state
+				this_pixel.r = this_pixel.r + this_pixel.a;
+				this_pixel.a = 0;
 
-				return float4(dirt.r + steam.r + lava.r + water.r + copper.r, 0, 0, 0);
+				return this_pixel;
 			}
 			ENDCG
 		}
