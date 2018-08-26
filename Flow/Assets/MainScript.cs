@@ -22,11 +22,14 @@ public class MainScript : MonoBehaviour
         // Then do state changes
         water_to_steam,
         steam_to_water,
+        dirt_to_lava,
+        lava_to_dirt,
         obsidian_to_lava,
         lava_to_obsidian,
         // Then finalize amount of anything that could have changed
         finalize_water,
         finalize_steam,
+        finalize_dirt,
         finalize_lava,
         finalize_obsidian,
         // Height needs to be updated after the flows
@@ -159,28 +162,40 @@ public class MainScript : MonoBehaviour
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
         materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 5.0f);
 
+        materials[(int)material.dirt_to_lava] = new Material(state_material);
+        texture_source[(int)material.dirt_to_lava] = (int)material.lava;
+        materials[(int)material.dirt_to_lava].SetFloat("_TransitionHotTemperature", 0.70f); // Transition to lava when hot
+        materials[(int)material.dirt_to_lava].SetFloat("_TransitionColdTemperature", 0.00f); // Does not transition to dirt
+        materials[(int)material.dirt_to_lava].SetTexture("_InputTex", textures[0, (int)material.dirt]);
+
+        materials[(int)material.lava_to_dirt] = new Material(state_material);
+        texture_source[(int)material.lava_to_dirt] = (int)material.dirt;
+        materials[(int)material.lava_to_dirt].SetFloat("_TransitionHotTemperature", -0.70f); // Transition to lava when hot
+        materials[(int)material.lava_to_dirt].SetFloat("_TransitionColdTemperature", -0.00f); // Does not transition to dirt
+        materials[(int)material.lava_to_dirt].SetTexture("_InputTex", textures[0, (int)material.lava]);
+
         materials[(int)material.obsidian_to_lava] = new Material(state_material);
         texture_source[(int)material.obsidian_to_lava] = (int)material.lava;
-        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionTemperature", 0.6f);
-        materials[(int)material.obsidian_to_lava].SetFloat("_Hysteresis", 0.2f);
+        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionHotTemperature", 0.70f);
+        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionColdTemperature", 0.40f);
         materials[(int)material.obsidian_to_lava].SetTexture("_InputTex", textures[0, (int)material.obsidian]);
 
         materials[(int)material.lava_to_obsidian] = new Material(state_material);
         texture_source[(int)material.lava_to_obsidian] = (int)material.obsidian;
-        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionTemperature", -0.6f);
-        materials[(int)material.lava_to_obsidian].SetFloat("_Hysteresis", 0.2f);
+        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionHotTemperature", -0.70f);
+        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionColdTemperature", -0.40f);
         materials[(int)material.lava_to_obsidian].SetTexture("_InputTex", textures[0, (int)material.lava]);
 
         materials[(int)material.water_to_steam] = new Material(state_material);
         texture_source[(int)material.water_to_steam] = (int)material.steam;
-        materials[(int)material.water_to_steam].SetFloat("_TransitionTemperature", 0.35f);
-        materials[(int)material.water_to_steam].SetFloat("_Hysteresis", 0.05f);
+        materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 0.40f);
+        materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 0.30f);
         materials[(int)material.water_to_steam].SetTexture("_InputTex", textures[0, (int)material.water]);
         
         materials[(int)material.steam_to_water] = new Material(state_material);
         texture_source[(int)material.steam_to_water] = (int)material.water;
-        materials[(int)material.steam_to_water].SetFloat("_TransitionTemperature", -0.35f);
-        materials[(int)material.steam_to_water].SetFloat("_Hysteresis", 0.05f);
+        materials[(int)material.steam_to_water].SetFloat("_TransitionHotTemperature", -0.40f);
+        materials[(int)material.steam_to_water].SetFloat("_TransitionColdTemperature", -0.30f);
         materials[(int)material.steam_to_water].SetTexture("_InputTex", textures[0, (int)material.steam]);
 
         materials[(int)material.finalize_water] = new Material(finalization_material);
@@ -188,7 +203,10 @@ public class MainScript : MonoBehaviour
 
         materials[(int)material.finalize_steam] = new Material(finalization_material);
         texture_source[(int)material.finalize_steam] = (int)material.steam;
-        
+
+        materials[(int)material.finalize_dirt] = new Material(finalization_material);
+        texture_source[(int)material.finalize_dirt] = (int)material.dirt;
+
         materials[(int)material.finalize_lava] = new Material(finalization_material);
         texture_source[(int)material.finalize_lava] = (int)material.lava;
 
@@ -245,11 +263,11 @@ public class MainScript : MonoBehaviour
             {
                 if ((y >= 0 && y <= 16) || y == height - 1 || x == 16 || (x >= 32 && x < 36) || x == 48 || x == 64 || x == width - 16)
                 {
-                    initial_data.SetPixel(x, y, new Color(1, 0, 0));
+                    initial_data.SetPixel(x, y, new Color(1, 0, 0, 0));
                 }
                 else
                 {
-                    initial_data.SetPixel(x, y, new Color(0, 0, 0));
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0, 0));
                 }
             }
         }

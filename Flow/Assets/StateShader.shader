@@ -8,8 +8,8 @@
 
 		_InputTex ("InputTex", 2D) = "black" {}
 		_HeatTex ("HeatTex", 2D) = "black" {}
-		_TransitionTemperature ("TransitionTemperature", float) = 0
-		_Hysteresis ("Hysteresis", float) = 0
+		_TransitionHotTemperature ("TransitionHotTemperature", float) = 0
+		_TransitionColdTemperature ("TransitionColdTemperature", float) = 0
 	}
 	SubShader
 	{
@@ -44,8 +44,8 @@
 
 			sampler2D _InputTex;
 			sampler2D _HeatTex;
-			float _TransitionTemperature;
-			float _Hysteresis;
+			float _TransitionHotTemperature;
+			float _TransitionColdTemperature;
 
 			v2f vert (appdata v)
 			{
@@ -70,14 +70,14 @@
 
 				// Temperature greater than 0 indicated positive transition
 				// Temperature less than 0 indicated positive transition
-				if(_TransitionTemperature > 0 && heat_pixel.a >  _TransitionTemperature + _Hysteresis
-				|| _TransitionTemperature < 0 && heat_pixel.a < -_TransitionTemperature - _Hysteresis)
+				if((_TransitionHotTemperature > 0 && heat_pixel.a >  _TransitionHotTemperature)
+				|| (_TransitionColdTemperature < 0 && heat_pixel.a < -_TransitionColdTemperature))
 				{
 					// Hot and heating or cold and cooling - this pixel is taking from the input
 					this_pixel.a += input_pixel.r * 0.01;
 				}
-				else if(_TransitionTemperature > 0 && heat_pixel.a <  _TransitionTemperature - _Hysteresis
-				     || _TransitionTemperature < 0 && heat_pixel.a > -_TransitionTemperature + _Hysteresis)
+				else if((_TransitionColdTemperature > 0 && heat_pixel.a <  _TransitionColdTemperature)
+				     || (_TransitionHotTemperature < 0 && heat_pixel.a > -_TransitionHotTemperature))
 				{
 					// Hot and cooling or cold and heat - this pixel is giving somewhere
 					 this_pixel.a -= this_pixel.r * 0.01;
