@@ -300,8 +300,8 @@ public class MainScript : MonoBehaviour
             state_materials[(int)transition.water_to_steam] = new Material(state_material);
             state_materials[(int)transition.water_to_steam].SetFloat("_TexelWidth", 1.0f / width);
             state_materials[(int)transition.water_to_steam].SetFloat("_TexelHeight", 1.0f / height);
-            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionHotTemperature", 0.5f);
-            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionColdTemperature", 0.01f);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionHotTemperature", 0.40f);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionColdTemperature", 0.30f);
             state_materials[(int)transition.water_to_steam].SetTexture("_HeatTex", heat_textures[0]);
             state_materials[(int)transition.water_to_steam].SetTexture("_InputTex", flow_textures[0, (int)flows.water]);
 
@@ -427,23 +427,30 @@ public class MainScript : MonoBehaviour
             {
                 if ((i != selected_element) == invert_selection)
                 {
+                    float temperature = 0.0f;
+
                     // Set the selected RenderTexture as the active one
                     switch ((element_selection)i)
                     {
                         case element_selection.dirt:
                             RenderTexture.active = solid_textures[(int)solids.dirt];
+                            temperature = 0.30f;
                             break;
                         case element_selection.copper:
                             RenderTexture.active = solid_textures[(int)solids.copper];
+                            temperature = 0.30f;
                             break;
                         case element_selection.water:
                             RenderTexture.active = flow_textures[0, (int)flows.water];
+                            temperature = 0.30f;
                             break;
                         case element_selection.steam:
                             RenderTexture.active = flow_textures[0, (int)flows.steam];
+                            temperature = 0.40f;
                             break;
                         case element_selection.lava:
                             RenderTexture.active = flow_textures[0, (int)flows.lava];
+                            temperature = 0.90f;
                             break;
                         case element_selection.heat:
                             RenderTexture.active = heat_textures[0];
@@ -476,11 +483,53 @@ public class MainScript : MonoBehaviour
                         // Place one
                         if (Input.GetMouseButton(2))
                         {
+                            
                             var temp = tex.GetPixel(pos_grid.x, pos_grid.y);
-                            tex.SetPixel(pos_grid.x, pos_grid.y,
-                                new Color(
-                                Mathf.Min(temp.r + 0.5f, 1.0f),
-                                temp.g, temp.b, temp.a));
+                            if (temp.r < 1.0f)
+                            {
+                                var original_amount = temp.r;
+                                var additional_amount = Mathf.Min(temp.r + 0.5f, 1.0f) - original_amount;
+                                tex.SetPixel(pos_grid.x, pos_grid.y,
+                                    new Color(original_amount + additional_amount,
+                                    temp.g, temp.b, temp.a));
+
+                                // If we're not placing heat, place some heat
+                                if ((element_selection)i != element_selection.heat)
+                                {
+                                    // Get the heat texture to add additional heat
+                                    RenderTexture.active = heat_textures[0];
+                                    Texture2D additional_heat_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+                                    additional_heat_tex.ReadPixels(new Rect(0, 0, additional_heat_tex.width, additional_heat_tex.height), 0, 0);
+
+                                    RenderTexture.active = height_texture;
+                                    Texture2D height_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+                                    height_tex.ReadPixels(new Rect(0, 0, height_tex.width, height_tex.height), 0, 0);
+
+                                    var heat_pixel = additional_heat_tex.GetPixel(pos_grid.x, pos_grid.y);
+                                    var height_pixel = height_tex.GetPixel(pos_grid.x, pos_grid.y);
+                                    var original_total = height_pixel.r;
+                                    var final_total = original_total + additional_amount;
+                                    
+                                    // Add the height to the height texture
+                                    height_tex.SetPixel(pos_grid.x, pos_grid.y,
+                                        new Color(final_total,
+                                        height_pixel.g, height_pixel.b, height_pixel.a));
+
+                                    // Modify the heat of the heat texture to reach the appropriate temperature
+                                    additional_heat_tex.SetPixel(pos_grid.x, pos_grid.y,
+                                        new Color(temperature * final_total,
+                                        heat_pixel.g, heat_pixel.b, temperature));
+
+                                    additional_heat_tex.Apply();
+                                    height_tex.Apply();
+
+                                    Graphics.Blit(additional_heat_tex, heat_textures[0]);
+                                    Graphics.Blit(height_tex, height_texture);
+
+                                    UnityEngine.Object.Destroy(additional_heat_tex);
+                                    UnityEngine.Object.Destroy(height_tex);
+                                }
+                            }
                         }
                     }
 
@@ -501,6 +550,7 @@ public class MainScript : MonoBehaviour
                     }
 
                     tex.Apply();
+                   
                     
                     // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
                     // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
@@ -525,8 +575,8 @@ public class MainScript : MonoBehaviour
                             Graphics.Blit(tex, heat_textures[0]);
                             break;
                     }
-
-                    // Destroy the texture to stop memory leaks
+                    
+                    // Destroy the textures to stop memory leaks
                     UnityEngine.Object.Destroy(tex);
                 }
             }
