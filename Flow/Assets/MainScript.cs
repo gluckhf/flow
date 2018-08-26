@@ -241,7 +241,7 @@ public class MainScript : MonoBehaviour
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        if ((y >= 16 && y <= 32) || x == 16 || (x >= 32 && x < 36) || x == 48 || x == 64)
+                        if ((y >= 0 && y <= 16) || y == height - 1 || x == 16 || (x >= 32 && x < 36) || x == 48 || x == 64 || x == width - 16)
                         {
                             initial_data.SetPixel(x, y, new Color(1, 0, 0));
                         }
