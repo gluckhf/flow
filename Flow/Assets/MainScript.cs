@@ -39,14 +39,11 @@ public class MainScript : MonoBehaviour
         
     public Material element_material;
     public Material height_material;
-    public Material heat_movement_material;
-    public Material heat_flow_material;
+    public Material heat_material;
+    public Material temperature_material;
     public Material world_material;
-
-    // State material adds from cold to hot
-    public Material state_material;
-    // Pair state material adds from hot to cold
-    public Material pair_state_material;  
+    public Material state_cold_to_hot_material;
+    public Material state_hot_to_cold_material;  
 
     // Provides a link to the debug text
     public Text DebugText;
@@ -143,20 +140,20 @@ public class MainScript : MonoBehaviour
         materials[(int)material.height] = new Material(height_material);
         texture_source[(int)material.height] = (int)material.height;
 
-        materials[(int)material.heat_movement] = new Material(heat_movement_material);
+        materials[(int)material.heat_movement] = new Material(heat_material);
         texture_source[(int)material.heat_movement] = (int)material.heat_movement;
 
-        materials[(int)material.heat_flow] = new Material(heat_flow_material);
+        materials[(int)material.heat_flow] = new Material(temperature_material);
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
         materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 5.0f);
 
-        materials[(int)material.water_to_steam] = new Material(state_material);
+        materials[(int)material.water_to_steam] = new Material(state_cold_to_hot_material);
         texture_source[(int)material.water_to_steam] = (int)material.steam;
         materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 0.40f);
         materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 0.30f);
         materials[(int)material.water_to_steam].SetTexture("_InputTex", textures[0, (int)material.water]);
 
-        materials[(int)material.steam_to_water] = new Material(pair_state_material);
+        materials[(int)material.steam_to_water] = new Material(state_hot_to_cold_material);
         texture_source[(int)material.steam_to_water] = (int)material.water;
         materials[(int)material.steam_to_water].SetTexture("_InputTex", textures[0, (int)material.steam]);
 

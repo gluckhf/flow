@@ -1,4 +1,4 @@
-﻿Shader "Flow/PairState"
+﻿Shader "Flow/StateColdToHot"
 {
 	Properties
 	{
@@ -7,6 +7,9 @@
 		_TexelHeight ("TexelHeight", float) = 0
 
 		_InputTex ("InputTex", 2D) = "black" {}
+		_HeatTex ("HeatTex", 2D) = "black" {}
+		_TransitionHotTemperature ("TransitionHotTemperature", float) = 0
+		_TransitionColdTemperature ("TransitionColdTemperature", float) = 0
 	}
 	SubShader
 	{
@@ -40,6 +43,9 @@
 			float _TexelHeight;
 
 			sampler2D _InputTex;
+			sampler2D _HeatTex;
+			float _TransitionHotTemperature;
+			float _TransitionColdTemperature;
 
 			v2f vert (appdata v)
 			{
@@ -51,13 +57,33 @@
 			
 			float4 frag (v2f i) : SV_Target
 			{
+				float small = 0.000001;
+
 				// sample this texture pixels
 				float4 this_pixel = tex2D(_MainTex, i.uv);
 				
 				// sample the input pixels
 				float4 input_pixel = tex2D(_InputTex, i.uv);
 				
-				this_pixel.r = this_pixel.r + 2.0 * (input_pixel.a - 0.5);
+				// sample the heat pixels
+				float4 heat_pixel = tex2D(_HeatTex, i.uv);
+
+				if(heat_pixel.a > _TransitionHotTemperature)
+				{
+					float amount_to_shift = input_pixel.r * 0.01;
+					this_pixel.r = this_pixel.r + amount_to_shift;
+					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
+				}
+				else if(heat_pixel.a < _TransitionColdTemperature)
+				{
+					float amount_to_shift = -this_pixel.r * 0.01;
+					this_pixel.r = this_pixel.r + amount_to_shift;
+					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
+				}
+				else
+				{
+					this_pixel.a = 0.5;
+				}
 
 				return this_pixel;
 			}

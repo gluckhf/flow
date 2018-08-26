@@ -1,4 +1,4 @@
-﻿Shader "Flow/HeatMovement"
+﻿Shader "Flow/Heat"
 {
 	Properties
 	{
