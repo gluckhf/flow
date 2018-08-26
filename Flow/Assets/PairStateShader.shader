@@ -2,10 +2,11 @@
 {
 	Properties
 	{
-		_MainTex ("Texture", 2D) = "white" {}
-		_InputTex ("InputTex", 2D) = "white" {}
+		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+
+		_InputTex ("InputTex", 2D) = "black" {}
 	}
 	SubShader
 	{
@@ -34,10 +35,11 @@
 
 			// Must be redeclared from Properties to be able to be used
 			sampler2D _MainTex;
-			sampler2D _InputTex;
 			float4 _MainTex_ST;
 			float _TexelWidth;
 			float _TexelHeight;
+
+			sampler2D _InputTex;
 
 			v2f vert (appdata v)
 			{

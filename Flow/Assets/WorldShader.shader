@@ -2,14 +2,16 @@
 {
 	Properties
 	{
-		_WaterTex ("WaterTex", 2D) = "white" {}
-		_SteamTex ("SteamTex", 2D) = "white" {}
-		_LavaTex ("LavaTex", 2D) = "white" {}
-		_DirtTex ("DirtTex", 2D) = "white" {}
-		_CopperTex ("CopperTex", 2D) = "white" {}
-		_HeatTex ("HeatTex", 2D) = "white" {}
+		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+
+		_WaterTex ("WaterTex", 2D) = "black" {}
+		_SteamTex ("SteamTex", 2D) = "black" {}
+		_LavaTex ("LavaTex", 2D) = "black" {}
+		_DirtTex ("DirtTex", 2D) = "black" {}
+		_CopperTex ("CopperTex", 2D) = "black" {}
+		_HeatTex ("HeatTex", 2D) = "black" {}
 		_Highlite ("Highlite", int) = 0
 	}
 	SubShader
@@ -38,21 +40,24 @@
 			};
 
 			// Must be redeclared from Properties to be able to be used
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			float _TexelWidth;
+			float _TexelHeight;
+
 			sampler2D _WaterTex;
 			sampler2D _SteamTex;
 			sampler2D _LavaTex;
 			sampler2D _DirtTex;
 			sampler2D _CopperTex;
 			sampler2D _HeatTex;
-			float _TexelWidth;
-			float _TexelHeight;
 			int _Highlite;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = v.uv;
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
 			

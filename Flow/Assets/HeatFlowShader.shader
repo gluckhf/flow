@@ -1,16 +1,17 @@
-﻿Shader "Flow/Heat2"
+﻿Shader "Flow/HeatFlow"
 {
 	Properties
 	{
-		_WaterTex ("WaterTex", 2D) = "white" {}
-		_SteamTex ("SteamTex", 2D) = "white" {}
-		_LavaTex ("LavaTex", 2D) = "white" {}
-		_DirtTex ("DirtTex", 2D) = "white" {}
-		_CopperTex ("CopperTex", 2D) = "white" {}
-		_HeightTex ("HeightTex", 2D) = "white" {}
-		_HeatTex ("HeatTex", 2D) = "white" {}
+		_MainTex ("Texture", 2D) = "black" {}
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
+
+		_WaterTex ("WaterTex", 2D) = "black" {}
+		_SteamTex ("SteamTex", 2D) = "black" {}
+		_LavaTex ("LavaTex", 2D) = "black" {}
+		_DirtTex ("DirtTex", 2D) = "black" {}
+		_CopperTex ("CopperTex", 2D) = "black" {}
+		_HeightTex ("HeightTex", 2D) = "black" {}
 		_FlowDivisor ("FlowDivisor", float) = 1
 	}
 	SubShader
@@ -39,22 +40,24 @@
 			};
 
 			// Must be redeclared from Properties to be able to be used
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			float _TexelWidth;
+			float _TexelHeight;
+
 			sampler2D _WaterTex;
 			sampler2D _SteamTex;
 			sampler2D _LavaTex;
 			sampler2D _DirtTex;
 			sampler2D _CopperTex;
 			sampler2D _HeightTex;
-			sampler2D _HeatTex;
-			float _TexelWidth;
-			float _TexelHeight;
 			float _FlowDivisor;
 
 			v2f vert (appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = v.uv;
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
 
@@ -75,11 +78,12 @@
 			float4 frag (v2f i) : SV_Target
 			{
 				// sample this texture pixels
-				float4 heat_pixel = tex2D(_HeatTex, i.uv);
-				float4 heat_pixel_n = tex2D(_HeatTex, i.uv + fixed2(0,_TexelHeight));
-				float4 heat_pixel_e = tex2D(_HeatTex, i.uv + fixed2(_TexelWidth,0));
-				float4 heat_pixel_s = tex2D(_HeatTex, i.uv - fixed2(0,_TexelHeight));
-				float4 heat_pixel_w = tex2D(_HeatTex, i.uv - fixed2(_TexelWidth,0));
+				float4 this_pixel = tex2D(_MainTex, i.uv);
+				
+				float4 this_pixel_n = tex2D(_MainTex, i.uv + fixed2(0,_TexelHeight));
+				float4 this_pixel_e = tex2D(_MainTex, i.uv + fixed2(_TexelWidth,0));
+				float4 this_pixel_s = tex2D(_MainTex, i.uv - fixed2(0,_TexelHeight));
+				float4 this_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
 
 				// Sample relevant elements
 				float4 water = tex2D(_WaterTex, i.uv);
@@ -119,8 +123,7 @@
 				float4 height_w = tex2D(_HeightTex, i.uv - fixed2(_TexelWidth,0));
 
 				float small = 0.000001;
-				
-				
+								
 				if(height.r > small)
 				{
 					// Calculate the conductivities surrounding this pixel
@@ -174,11 +177,11 @@
 
 					// Calculate the temperatures surrounding this pixel
 					// Temperature = heat / average capacity
-					float temperature_this = heat_pixel.r / height.r;
-					float temperature_n = heat_pixel_n.r / height_n.r;
-					float temperature_e = heat_pixel_e.r / height_e.r;
-					float temperature_s = heat_pixel_s.r / height_s.r;
-					float temperature_w = heat_pixel_w.r / height_w.r;
+					float temperature_this = this_pixel.r / height.r;
+					float temperature_n = this_pixel_n.r / height_n.r;
+					float temperature_e = this_pixel_e.r / height_e.r;
+					float temperature_s = this_pixel_s.r / height_s.r;
+					float temperature_w = this_pixel_w.r / height_w.r;
 
 					// Calculate the flow in each direction dur to temperature differences and average conductivities
 					float temperature_flow_in_n = avg_conductivity_this * avg_conductivity_n * (temperature_n - temperature_this) / _FlowDivisor;
@@ -192,27 +195,27 @@
 					float heat_flow_in_w = getHeatFlow(temperature_flow_in_w, height.r, height_w.r);
 
 					// Heat in red
-					heat_pixel.r = heat_pixel.r
+					this_pixel.r = this_pixel.r
 					+ heat_flow_in_n
 					+ heat_flow_in_e
 					+ heat_flow_in_s
 					+ heat_flow_in_w;
 
 					// Conductivity in blue
-					heat_pixel.b = avg_conductivity_this;
-
+					this_pixel.b = avg_conductivity_this;
+					
 					// Temperature in alpha				
-					heat_pixel.a = max(heat_pixel.r / max(height.r, small), 0);
+					this_pixel.a = max(this_pixel.r / max(height.r, small), 0);
 				}
 				else
 				{
-					heat_pixel.r = 0;
-					heat_pixel.g = 0;
-					heat_pixel.b = 0;
-					heat_pixel.a = 0;
+					this_pixel.r = 0;
+					this_pixel.g = 0;
+					this_pixel.b = 0;
+					this_pixel.a = 0;
 				}
-
-				return heat_pixel;
+				
+				return this_pixel;
 			}
 			ENDCG
 		}
