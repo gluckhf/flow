@@ -6,11 +6,12 @@
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
 
-		_WaterTex ("WaterTex", 2D) = "black" {}
-		_SteamTex ("SteamTex", 2D) = "black" {}
-		_LavaTex ("LavaTex", 2D) = "black" {}
 		_DirtTex ("DirtTex", 2D) = "black" {}
 		_CopperTex ("CopperTex", 2D) = "black" {}
+		_ObsidianTex ("ObsidianTex", 2D) = "black" {}
+		_WaterTex ("WaterTex", 2D) = "black" {}
+		_LavaTex ("LavaTex", 2D) = "black" {}
+		_SteamTex ("SteamTex", 2D) = "black" {}
 		_HeightTex ("HeightTex", 2D) = "black" {}
 		_FlowDivisor ("FlowDivisor", float) = 1
 	}
@@ -45,11 +46,12 @@
 			float _TexelWidth;
 			float _TexelHeight;
 
-			sampler2D _WaterTex;
-			sampler2D _SteamTex;
-			sampler2D _LavaTex;
 			sampler2D _DirtTex;
 			sampler2D _CopperTex;
+			sampler2D _ObsidianTex;
+			sampler2D _WaterTex;
+			sampler2D _LavaTex;
+			sampler2D _SteamTex;
 			sampler2D _HeightTex;
 			float _FlowDivisor;
 
@@ -86,24 +88,6 @@
 				float4 this_pixel_w = tex2D(_MainTex, i.uv - fixed2(_TexelWidth,0));
 
 				// Sample relevant elements
-				float4 water = tex2D(_WaterTex, i.uv);
-				float4 water_n = tex2D(_WaterTex, i.uv + fixed2(0,_TexelHeight));
-				float4 water_e = tex2D(_WaterTex, i.uv + fixed2(_TexelWidth,0));
-				float4 water_s = tex2D(_WaterTex, i.uv - fixed2(0,_TexelHeight));
-				float4 water_w = tex2D(_WaterTex, i.uv - fixed2(_TexelWidth,0));
-
-				float4 steam = tex2D(_SteamTex, i.uv);
-				float4 steam_n = tex2D(_SteamTex, i.uv + fixed2(0,_TexelHeight));
-				float4 steam_e = tex2D(_SteamTex, i.uv + fixed2(_TexelWidth,0));
-				float4 steam_s = tex2D(_SteamTex, i.uv - fixed2(0,_TexelHeight));
-				float4 steam_w = tex2D(_SteamTex, i.uv - fixed2(_TexelWidth,0));
-
-				float4 lava = tex2D(_LavaTex, i.uv);
-				float4 lava_n = tex2D(_LavaTex, i.uv + fixed2(0,_TexelHeight));
-				float4 lava_e = tex2D(_LavaTex, i.uv + fixed2(_TexelWidth,0));
-				float4 lava_s = tex2D(_LavaTex, i.uv - fixed2(0,_TexelHeight));
-				float4 lava_w = tex2D(_LavaTex, i.uv - fixed2(_TexelWidth,0));
-
 				float4 dirt = tex2D(_DirtTex, i.uv);
 				float4 dirt_n = tex2D(_DirtTex, i.uv + fixed2(0,_TexelHeight));
 				float4 dirt_e = tex2D(_DirtTex, i.uv + fixed2(_TexelWidth,0));
@@ -115,6 +99,30 @@
 				float4 copper_e = tex2D(_CopperTex, i.uv + fixed2(_TexelWidth,0));
 				float4 copper_s = tex2D(_CopperTex, i.uv - fixed2(0,_TexelHeight));
 				float4 copper_w = tex2D(_CopperTex, i.uv - fixed2(_TexelWidth,0));
+
+				float4 obsidian = tex2D(_ObsidianTex, i.uv);
+				float4 obsidian_n = tex2D(_ObsidianTex, i.uv + fixed2(0,_TexelHeight));
+				float4 obsidian_e = tex2D(_ObsidianTex, i.uv + fixed2(_TexelWidth,0));
+				float4 obsidian_s = tex2D(_ObsidianTex, i.uv - fixed2(0,_TexelHeight));
+				float4 obsidian_w = tex2D(_ObsidianTex, i.uv - fixed2(_TexelWidth,0));
+
+				float4 water = tex2D(_WaterTex, i.uv);
+				float4 water_n = tex2D(_WaterTex, i.uv + fixed2(0,_TexelHeight));
+				float4 water_e = tex2D(_WaterTex, i.uv + fixed2(_TexelWidth,0));
+				float4 water_s = tex2D(_WaterTex, i.uv - fixed2(0,_TexelHeight));
+				float4 water_w = tex2D(_WaterTex, i.uv - fixed2(_TexelWidth,0));
+				
+				float4 lava = tex2D(_LavaTex, i.uv);
+				float4 lava_n = tex2D(_LavaTex, i.uv + fixed2(0,_TexelHeight));
+				float4 lava_e = tex2D(_LavaTex, i.uv + fixed2(_TexelWidth,0));
+				float4 lava_s = tex2D(_LavaTex, i.uv - fixed2(0,_TexelHeight));
+				float4 lava_w = tex2D(_LavaTex, i.uv - fixed2(_TexelWidth,0));
+
+				float4 steam = tex2D(_SteamTex, i.uv);
+				float4 steam_n = tex2D(_SteamTex, i.uv + fixed2(0,_TexelHeight));
+				float4 steam_e = tex2D(_SteamTex, i.uv + fixed2(_TexelWidth,0));
+				float4 steam_s = tex2D(_SteamTex, i.uv - fixed2(0,_TexelHeight));
+				float4 steam_w = tex2D(_SteamTex, i.uv - fixed2(_TexelWidth,0));
 
 				float4 height = tex2D(_HeightTex, i.uv);
 				float4 height_n = tex2D(_HeightTex, i.uv + fixed2(0,_TexelHeight));
@@ -128,9 +136,10 @@
 				{
 					// Calculate the conductivities surrounding this pixel
 					// https://en.wikipedia.org/wiki/List_of_thermal_conductivities
-					float con_scaling = 4.0;
-					float con_copper = 4.0 / con_scaling;
-					float con_lava = 1.0 / con_scaling; //http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.430.2215&rep=rep1&type=pdf
+					float con_scaling = 6.0;
+					float con_copper = 6.0 / con_scaling; // Copper is 400, but is scaled down here to be usable
+					float con_lava = 1.89 / con_scaling; // Glass & 800°K
+					float con_obsidian = 1.11 / con_scaling; // Glass & 300°K
 					float con_water = 0.591 / con_scaling; // Water
 					float con_steam = 0.0471 / con_scaling; // Water vapor, 600°K
 					float con_dirt = 0.0335 / con_scaling; // Soil, organic, dry
@@ -140,7 +149,8 @@
 					+ steam.r * con_steam 
 					+ lava.r * con_lava 
 					+ dirt.r * con_dirt
-					+ copper.r * con_copper)
+					+ copper.r * con_copper
+					+ obsidian.r * con_obsidian)
 								/ max(height.r, small);
 
 					float avg_conductivity_n = 
@@ -148,7 +158,8 @@
 					+ steam_n.r * con_steam 
 					+ lava_n.r * con_lava 
 					+ dirt_n.r * con_dirt
-					+ copper_n.r * con_copper)
+					+ copper_n.r * con_copper
+					+ obsidian_n.r * con_obsidian)
 								/ max(height_n.r, small);
 
 					float avg_conductivity_e = 
@@ -156,7 +167,8 @@
 					+ steam_e.r * con_steam 
 					+ lava_e.r * con_lava 
 					+ dirt_e.r * con_dirt
-					+ copper_e.r * con_copper)
+					+ copper_e.r * con_copper
+					+ obsidian_e.r * con_obsidian)
 								/ max(height_e.r, small);
 
 					float avg_conductivity_s = 
@@ -164,7 +176,8 @@
 					+ steam_s.r * con_steam 
 					+ lava_s.r * con_lava 
 					+ dirt_s.r * con_dirt
-					+ copper_s.r * con_copper)
+					+ copper_s.r * con_copper
+					+ obsidian_s.r * con_obsidian)
 								/ max(height_s.r, small);
 
 					float avg_conductivity_w = 
@@ -172,7 +185,8 @@
 					+ steam_w.r * con_steam 
 					+ lava_w.r * con_lava 
 					+ dirt_w.r * con_dirt
-					+ copper_w.r * con_copper)
+					+ copper_w.r * con_copper
+					+ obsidian_w.r * con_obsidian)
 								/ max(height_w.r, small);
 
 					// Calculate the temperatures surrounding this pixel

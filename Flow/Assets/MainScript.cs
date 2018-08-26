@@ -13,6 +13,7 @@ public class MainScript : MonoBehaviour
         // Solids
         dirt = 0,
         copper,
+        obsidian,
         // Liquids
         water,
         lava,
@@ -21,9 +22,13 @@ public class MainScript : MonoBehaviour
         // Then do state changes
         water_to_steam,
         steam_to_water,
+        obsidian_to_lava,
+        lava_to_obsidian,
         // Then finalize amount of anything that could have changed
         finalize_water,
         finalize_steam,
+        finalize_lava,
+        finalize_obsidian,
         // Height needs to be updated after the flows
         height,
         // Heat movement depends on height and flow variables
@@ -63,11 +68,12 @@ public class MainScript : MonoBehaviour
     private enum element_selection
     {
         all = 0,
-        water,
-        steam,
-        lava,
         dirt,
         copper,
+        obsidian,
+        water,
+        lava,
+        steam,
         heat,
         size
     }
@@ -76,8 +82,7 @@ public class MainScript : MonoBehaviour
     bool invert_selection = false;
 
     string element_selection_text = "";
-
-
+    
     /// <summary>
     /// Initializes all textures to have correct filtering / mips / etc. properties
     /// and sets them to all black (full zeroes)
@@ -125,6 +130,10 @@ public class MainScript : MonoBehaviour
         texture_source[(int)material.copper] = (int)material.copper;
         materials[(int)material.copper].SetFloat("_FlowDivisor", 0.0f);
 
+        materials[(int)material.obsidian] = new Material(element_material);
+        texture_source[(int)material.obsidian] = (int)material.obsidian;
+        materials[(int)material.obsidian].SetFloat("_FlowDivisor", 0.0f);
+
         materials[(int)material.water] = new Material(element_material);
         texture_source[(int)material.water] = (int)material.water;
         materials[(int)material.water].SetFloat("_FlowDivisor", 10.0f);
@@ -150,6 +159,18 @@ public class MainScript : MonoBehaviour
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
         materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 5.0f);
 
+        materials[(int)material.obsidian_to_lava] = new Material(state_material);
+        texture_source[(int)material.obsidian_to_lava] = (int)material.lava;
+        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionTemperature", 0.6f);
+        materials[(int)material.obsidian_to_lava].SetFloat("_Hysteresis", 0.2f);
+        materials[(int)material.obsidian_to_lava].SetTexture("_InputTex", textures[0, (int)material.obsidian]);
+
+        materials[(int)material.lava_to_obsidian] = new Material(state_material);
+        texture_source[(int)material.lava_to_obsidian] = (int)material.obsidian;
+        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionTemperature", -0.6f);
+        materials[(int)material.lava_to_obsidian].SetFloat("_Hysteresis", 0.2f);
+        materials[(int)material.lava_to_obsidian].SetTexture("_InputTex", textures[0, (int)material.lava]);
+
         materials[(int)material.water_to_steam] = new Material(state_material);
         texture_source[(int)material.water_to_steam] = (int)material.steam;
         materials[(int)material.water_to_steam].SetFloat("_TransitionTemperature", 0.35f);
@@ -167,6 +188,12 @@ public class MainScript : MonoBehaviour
 
         materials[(int)material.finalize_steam] = new Material(finalization_material);
         texture_source[(int)material.finalize_steam] = (int)material.steam;
+        
+        materials[(int)material.finalize_lava] = new Material(finalization_material);
+        texture_source[(int)material.finalize_lava] = (int)material.lava;
+
+        materials[(int)material.finalize_obsidian] = new Material(finalization_material);
+        texture_source[(int)material.finalize_obsidian] = (int)material.obsidian;
 
         materials[(int)material.world] = new Material(world_material);
         texture_source[(int)material.world] = (int)material.world;
@@ -180,6 +207,7 @@ public class MainScript : MonoBehaviour
 
             materials[mat].SetTexture("_DirtTex", textures[0, (int)material.dirt]);
             materials[mat].SetTexture("_CopperTex", textures[0, (int)material.copper]);
+            materials[mat].SetTexture("_ObsidianTex", textures[0, (int)material.obsidian]);
             materials[mat].SetTexture("_WaterTex", textures[0, (int)material.water]);
             materials[mat].SetTexture("_LavaTex", textures[0, (int)material.lava]);
             materials[mat].SetTexture("_SteamTex", textures[0, (int)material.steam]);
@@ -331,17 +359,21 @@ public class MainScript : MonoBehaviour
                             RenderTexture.active = textures[0, (int)material.copper];
                             temperature = 0.30f;
                             break;
+                        case element_selection.obsidian:
+                            RenderTexture.active = textures[0, (int)material.obsidian];
+                            temperature = 0.30f;
+                            break;
                         case element_selection.water:
                             RenderTexture.active = textures[0, (int)material.water];
                             temperature = 0.30f;
                             break;
-                        case element_selection.steam:
-                            RenderTexture.active = textures[0, (int)material.steam];
-                            temperature = 0.40f;
-                            break;
                         case element_selection.lava:
                             RenderTexture.active = textures[0, (int)material.lava];
                             temperature = 0.90f;
+                            break;
+                        case element_selection.steam:
+                            RenderTexture.active = textures[0, (int)material.steam];
+                            temperature = 0.40f;
                             break;
                         case element_selection.heat:
                             RenderTexture.active = textures[0, (int)material.heat_movement];
@@ -453,14 +485,17 @@ public class MainScript : MonoBehaviour
                         case element_selection.copper:
                             Graphics.Blit(tex, textures[0, (int)material.copper]);
                             break;
+                        case element_selection.obsidian:
+                            Graphics.Blit(tex, textures[0, (int)material.obsidian]);
+                            break;
                         case element_selection.water:
                             Graphics.Blit(tex, textures[0, (int)material.water]);
                             break;
-                        case element_selection.steam:
-                            Graphics.Blit(tex, textures[0, (int)material.steam]);
-                            break;
                         case element_selection.lava:
                             Graphics.Blit(tex, textures[0, (int)material.lava]);
+                            break;
+                        case element_selection.steam:
+                            Graphics.Blit(tex, textures[0, (int)material.steam]);
                             break;
                         case element_selection.heat:
                             Graphics.Blit(tex, textures[0, (int)material.heat_movement]);

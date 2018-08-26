@@ -6,11 +6,12 @@
 		_TexelWidth ("TexelWidth", float) = 0
 		_TexelHeight ("TexelHeight", float) = 0
 
-		_WaterTex ("WaterTex", 2D) = "black" {}
-		_SteamTex ("SteamTex", 2D) = "black" {}
-		_LavaTex ("LavaTex", 2D) = "black" {}
 		_DirtTex ("DirtTex", 2D) = "black" {}
 		_CopperTex ("CopperTex", 2D) = "black" {}
+		_ObsidianTex ("ObsidianTex", 2D) = "black" {}
+		_WaterTex ("WaterTex", 2D) = "black" {}
+		_LavaTex ("LavaTex", 2D) = "black" {}
+		_SteamTex ("SteamTex", 2D) = "black" {}
 	}
 	SubShader
 	{
@@ -43,12 +44,13 @@
 			float _TexelWidth;
 			float _TexelHeight;
 
-			sampler2D _WaterTex;
-			sampler2D _SteamTex;
-			sampler2D _LavaTex;
 			sampler2D _DirtTex;
 			sampler2D _CopperTex;
-
+			sampler2D _ObsidianTex;
+			sampler2D _WaterTex;
+			sampler2D _LavaTex;
+			sampler2D _SteamTex;
+			
 			v2f vert (appdata v)
 			{
 				v2f o;
@@ -65,8 +67,9 @@
 				float4 lava = tex2D(_LavaTex, i.uv);
 				float4 dirt = tex2D(_DirtTex, i.uv);
 				float4 copper = tex2D(_CopperTex, i.uv);
+				float4 obsidian = tex2D(_ObsidianTex, i.uv);
 
-				return float4(dirt.r + steam.r + lava.r + water.r + copper.r, 0, 0, 0);
+				return float4(dirt.r + steam.r + lava.r + water.r + copper.r + obsidian.r, 0, 0, 0);
 			}
 			ENDCG
 		}
