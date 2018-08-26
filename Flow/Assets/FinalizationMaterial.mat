@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: PairStateMaterial
+  m_Name: FinalizationMaterial
   m_Shader: {fileID: 4800000, guid: a38d17c665c6c4049819b57926e39f3c, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4

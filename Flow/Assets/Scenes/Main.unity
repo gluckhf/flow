@@ -282,13 +282,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh_renderer: {fileID: 592761663}
+  element_material: {fileID: 2100000, guid: 54d27fced0805fd4b9b56ea08e028ac9, type: 2}
   height_material: {fileID: 2100000, guid: 8d66768396142cf49a004f835a9b3bf9, type: 2}
   heat_material: {fileID: 2100000, guid: f70be47822e8b1741b6cf7a801d92023, type: 2}
-  heat2_material: {fileID: 2100000, guid: f99258b3fb4307042a1401ac64ac00f2, type: 2}
-  state_material: {fileID: 2100000, guid: 6dac3b738e9a5a64e96a6e53625faaf1, type: 2}
-  pair_state_material: {fileID: 2100000, guid: c50917e4b54b3554193ab2f8fe20bb18, type: 2}
+  temperature_material: {fileID: 2100000, guid: f99258b3fb4307042a1401ac64ac00f2,
+    type: 2}
   world_material: {fileID: 2100000, guid: d5bec54ce1397ab4998dadedd0fcdf3b, type: 2}
-  flow_material: {fileID: 2100000, guid: 54d27fced0805fd4b9b56ea08e028ac9, type: 2}
+  state_material: {fileID: 2100000, guid: 6dac3b738e9a5a64e96a6e53625faaf1, type: 2}
+  finalization_material: {fileID: 2100000, guid: c50917e4b54b3554193ab2f8fe20bb18,
+    type: 2}
   DebugText: {fileID: 609288946}
   width: 256
   height: 128
