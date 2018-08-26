@@ -58,13 +58,13 @@
 				return o;
 			}
 
-			float getHeatFlow(float temperature_flow, float myCapacity, float myAmount, float theirCapacity, float theirAmount)
+			float getHeatFlow(float temperature_flow, float myCapacity, float theirCapacity)
 			{
 				float small = 0.000001;
 
 				// Figure out how much will actually flow
-				float heat_flow_in = max(temperature_flow * theirCapacity * theirAmount, 0);
-				float heat_flow_out = max(-temperature_flow * myCapacity * myAmount, 0);
+				float heat_flow_in = max(temperature_flow * theirCapacity, 0);
+				float heat_flow_out = max(-temperature_flow * myCapacity, 0);
 
 				// Use a clever statement to select between the in/out with correct sign
 				float heat_flow_final = max(heat_flow_in, 0) + min(-heat_flow_out, 0);
@@ -223,23 +223,23 @@
 								/ max(height_w.r, small);
 
 					// Calculate the temperatures surrounding this pixel
-					// Temperature = heat / (average capacity * amount)
-					float temperature_this = heat_pixel.r / (avg_capacity_this * height.r);
-					float temperature_n = heat_pixel_n.r / (avg_capacity_n * height_n.r);
-					float temperature_e = heat_pixel_e.r / (avg_capacity_e * height_e.r);
-					float temperature_s = heat_pixel_s.r / (avg_capacity_s * height_s.r);
-					float temperature_w = heat_pixel_w.r / (avg_capacity_w * height_w.r);
+					// Temperature = heat / average capacity
+					float temperature_this = heat_pixel.r / avg_capacity_this;
+					float temperature_n = heat_pixel_n.r / avg_capacity_n;
+					float temperature_e = heat_pixel_e.r / avg_capacity_e;
+					float temperature_s = heat_pixel_s.r / avg_capacity_s;
+					float temperature_w = heat_pixel_w.r / avg_capacity_w;
 
-					// Calculate the flow in each direction due to temperature differences and average conductivities
+					// Calculate the flow in each direction dur to temperature differences and average conductivities
 					float temperature_flow_in_n = avg_conductivity_this * avg_conductivity_n * (temperature_n - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_e = avg_conductivity_this * avg_conductivity_e * (temperature_e - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_s = avg_conductivity_this * avg_conductivity_s * (temperature_s - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_w = avg_conductivity_this * avg_conductivity_w * (temperature_w - temperature_this) / _FlowDivisor;
 
-					float heat_flow_in_n = getHeatFlow(temperature_flow_in_n, avg_capacity_this, height.r, avg_capacity_n, height_n.r);
-					float heat_flow_in_e = getHeatFlow(temperature_flow_in_e, avg_capacity_this, height.r, avg_capacity_e, height_e.r);
-					float heat_flow_in_s = getHeatFlow(temperature_flow_in_s, avg_capacity_this, height.r, avg_capacity_s, height_s.r);
-					float heat_flow_in_w = getHeatFlow(temperature_flow_in_w, avg_capacity_this, height.r, avg_capacity_w, height_w.r);
+					float heat_flow_in_n = getHeatFlow(temperature_flow_in_n, avg_capacity_this, avg_capacity_n);
+					float heat_flow_in_e = getHeatFlow(temperature_flow_in_e, avg_capacity_this, avg_capacity_e);
+					float heat_flow_in_s = getHeatFlow(temperature_flow_in_s, avg_capacity_this, avg_capacity_s);
+					float heat_flow_in_w = getHeatFlow(temperature_flow_in_w, avg_capacity_this, avg_capacity_w);
 
 					// Heat in red
 					heat_pixel.r = heat_pixel.r
@@ -255,7 +255,7 @@
 					heat_pixel.b = avg_conductivity_this;
 
 					// Temperature in alpha				
-					heat_pixel.a = max(heat_pixel.r / max(height.r * avg_capacity_this, small), 0);
+					heat_pixel.a = max(heat_pixel.r / max(avg_capacity_this, small), 0);
 				}
 				else
 				{

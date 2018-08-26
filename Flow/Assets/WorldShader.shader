@@ -65,7 +65,7 @@
 				float dirt = pow(tex2D(_DirtTex, i.uv).r, 0.3);
 				float copper = pow(tex2D(_CopperTex, i.uv).r, 0.3);
 				float heat = tex2D(_HeatTex, i.uv).r;
-				float temperature = tex2D(_HeatTex, i.uv).a / 10.0;
+				float temperature = tex2D(_HeatTex, i.uv).a;
 
 				float r = copper*0.66 + dirt*0.56 + steam + lava;
 				float g = copper*0.33 + dirt*0.34 + steam;
