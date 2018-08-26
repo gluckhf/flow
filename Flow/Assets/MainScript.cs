@@ -301,7 +301,7 @@ public class MainScript : MonoBehaviour
             state_materials[(int)transition.water_to_steam].SetFloat("_TexelWidth", 1.0f / width);
             state_materials[(int)transition.water_to_steam].SetFloat("_TexelHeight", 1.0f / height);
             state_materials[(int)transition.water_to_steam].SetFloat("_TransitionHotTemperature", 0.5f);
-            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionColdTemperature", 0.1f);
+            state_materials[(int)transition.water_to_steam].SetFloat("_TransitionColdTemperature", 0.01f);
             state_materials[(int)transition.water_to_steam].SetTexture("_HeatTex", heat_textures[0]);
             state_materials[(int)transition.water_to_steam].SetTexture("_InputTex", flow_textures[0, (int)flows.water]);
 
@@ -412,6 +412,7 @@ public class MainScript : MonoBehaviour
             var pixel = tex.GetPixel(pos_grid.x, pos_grid.y);
 
             additional_text = pixel.a.ToString();
+            UnityEngine.Object.Destroy(tex);
         }
 
         DebugText.text = pos_grid.ToString() + "\n" + additional_text + "\n" + element_selection_text;

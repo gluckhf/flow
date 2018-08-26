@@ -66,15 +66,15 @@
 				// sample the heat pixels
 				float4 heat_pixel = tex2D(_HeatTex, i.uv);
 
-				if(heat_pixel.a > _TransitionHotTemperature && input_pixel.r > 0.1)
+				if(heat_pixel.a > _TransitionHotTemperature)
 				{
-					float amount_to_shift = 0.01;
+					float amount_to_shift = input_pixel.r * 0.01;
 					this_pixel.r = this_pixel.r + amount_to_shift;
 					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
 				}
-				else if(heat_pixel.a < _TransitionColdTemperature && this_pixel.r > 0.1)
+				else if(heat_pixel.a < _TransitionColdTemperature)
 				{
-					float amount_to_shift = -0.01;
+					float amount_to_shift = -this_pixel.r * 0.01;
 					this_pixel.r = this_pixel.r + amount_to_shift;
 					this_pixel.a = 0.5 + 0.5 * -amount_to_shift;
 				}
