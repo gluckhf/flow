@@ -91,19 +91,17 @@
 
 				float output = 0;
 
-				if(_Highlite == 1) { output = dirt; }
-				if(_Highlite == 2) { output = copper; }
-				if(_Highlite == 3) { output = obsidian; }
-				if(_Highlite == 4) { output = water; }
-				if(_Highlite == 5) { output = lava; }
-				if(_Highlite == 6) { output = steam; }
-				if(_Highlite == 7) { output = temperature; }
+				if(_Highlite == 0) { output = dirt; }
+				if(_Highlite == 1) { output = copper; }
+				if(_Highlite == 2) { output = obsidian; }
+				if(_Highlite == 3) { output = water; }
+				if(_Highlite == 4) { output = lava; }
+				if(_Highlite == 5) { output = steam; }
+				if(_Highlite == 6) { output = temperature; }
 
 				// B&W + output
 				{
-				
 					float avg = (r+g+b) / 3.0;
-
 
 					return float4(
 					min(1.0, avg + output), 

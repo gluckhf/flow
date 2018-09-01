@@ -70,8 +70,7 @@ public class MainScript : MonoBehaviour
     // Element selection
     private enum element_selection
     {
-        all = 0,
-        dirt,
+        dirt = 0,
         copper,
         obsidian,
         water,
@@ -81,8 +80,7 @@ public class MainScript : MonoBehaviour
         size
     }
 
-    int selected_element = 0;
-    bool invert_selection = false;
+    element_selection selected_element = element_selection.dirt;
 
     string element_selection_text = "";
     
@@ -92,20 +90,21 @@ public class MainScript : MonoBehaviour
     /// </summary>
     private void InitializeTextures()
     {
-        // Initialize the data to black (all zeroes)
-        Texture2D initial_data = new Texture2D(width, height);
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                initial_data.SetPixel(x, y, new Color(0, 0, 0, 0));
-            }
-        }
-        initial_data.Apply();
-
         // Create each texture master (0) and slave (1) and blit to their initial data
         for (int tex = 0; tex < (int)material.size; tex++)
         {
+            // Initialize the data to black (all zeroes)
+            Texture2D initial_data = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0, 0));
+                }
+            }
+            
+            initial_data.Apply();
+
             for (int i = 0; i < 2; i++)
             {
                 textures[i, tex] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
@@ -116,10 +115,10 @@ public class MainScript : MonoBehaviour
 
                 Graphics.Blit(initial_data, textures[i, tex]);
             }
-        }
 
-        // Destroy the initial data texture to prevent memory leak
-        UnityEngine.Object.Destroy(initial_data);
+            // Destroy the initial data texture to prevent memory leak
+            UnityEngine.Object.Destroy(initial_data);
+        }
     }
 
     private void InitializeMaterials()
@@ -233,21 +232,26 @@ public class MainScript : MonoBehaviour
             materials[mat].SetTexture("_HeatTex", textures[0, (int)material.heat_movement]);
         }
     }
-
-    // Use this for initialization
-    void Start()
+    
+    private void UpdateElementSelectionText()
     {
-        // Initialize the element selection text
         element_selection_text = "";
-        for (int i = 1; i < (int)element_selection.size; i++)
+        for (int i = 0; i < (int)element_selection.size; i++)
         {
             element_selection_text += i.ToString() + ":";
-            if ((i != selected_element) == invert_selection)
+            if ((element_selection)i == selected_element)
             {
                 element_selection_text += "    ";
             }
             element_selection_text += ((element_selection)i).ToString() + "\n";
         }
+    }
+
+    // Use this for initialization
+    void Start()
+    {
+        // Initialize the element selection text
+        UpdateElementSelectionText();
 
         // Match the local scale to the scale set up in the input parameters
         transform.localScale = new Vector3(1f, (float)height / (float)width, 1f);
@@ -284,13 +288,162 @@ public class MainScript : MonoBehaviour
         }
     }
 
+    private void PlaceElement(Vector2Int pos_grid, element_selection sel, bool change_heat, float amount, int radius)
+    {
+        // TODO: The "proper" way to do this would be to write a shader to modify the texture then run the shader
+
+        // Remember currently active render texture
+        RenderTexture currentActiveRT = RenderTexture.active;
+
+        float temperature = 0.0f;
+
+        // Set the selected RenderTexture as the active one
+        switch (sel)
+        {
+            case element_selection.dirt:
+                RenderTexture.active = textures[0, (int)material.dirt];
+                temperature = 0.30f;
+                break;
+            case element_selection.copper:
+                RenderTexture.active = textures[0, (int)material.copper];
+                temperature = 0.30f;
+                break;
+            case element_selection.obsidian:
+                RenderTexture.active = textures[0, (int)material.obsidian];
+                temperature = 0.30f;
+                break;
+            case element_selection.water:
+                RenderTexture.active = textures[0, (int)material.water];
+                temperature = 0.30f;
+                break;
+            case element_selection.lava:
+                RenderTexture.active = textures[0, (int)material.lava];
+                temperature = 0.90f;
+                break;
+            case element_selection.steam:
+                RenderTexture.active = textures[0, (int)material.steam];
+                temperature = 0.40f;
+                break;
+            case element_selection.heat:
+                RenderTexture.active = textures[0, (int)material.heat_movement];
+                break;
+            default:
+                return;
+        }
+
+        // Create a new Texture2D and read the RenderTexture image into it
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+        tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+        // Get the height texture
+        RenderTexture.active = textures[0, (int)material.height];
+        Texture2D height_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+        height_tex.ReadPixels(new Rect(0, 0, height_tex.width, height_tex.height), 0, 0);
+
+        // Get the heat texture
+        RenderTexture.active = textures[0, (int)material.heat_movement];
+        Texture2D additional_heat_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+        additional_heat_tex.ReadPixels(new Rect(0, 0, additional_heat_tex.width, additional_heat_tex.height), 0, 0);
+
+        // Change every pixel in radius
+        for (int x = -radius; x <= radius; x++)
+        {
+            for (int y = -radius; y <= radius; y++)
+            {
+                int pix_x = pos_grid.x + x;
+                int pix_y = pos_grid.y + y;
+                var pixel = tex.GetPixel(pix_x, pix_y);
+
+                if (Mathf.Abs(x) * Mathf.Abs(x) + Mathf.Abs(y) * Mathf.Abs(y) < radius * radius)
+                {
+                    // Calculate change in amount
+                    float delta_amount = 0.0f;
+                    if (pixel.r > 0.0f && amount < 0.0f)
+                    {
+                        delta_amount = Mathf.Max(pixel.r + amount, 0.0f) - pixel.r;
+                    }
+                    else if (pixel.r < 1.0f && amount > 0.0f)
+                    {
+                        delta_amount = Mathf.Min(pixel.r + amount, 1.0f) - pixel.r;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    // If there is amount to change, change it
+                    tex.SetPixel(pix_x, pix_y,
+                                    new Color(pixel.r + delta_amount, pixel.g, pixel.b, pixel.a));
+
+                    // Change height
+                    if (sel != element_selection.heat)
+                    {
+                        var height_pixel = height_tex.GetPixel(pix_x, pix_y);
+                        var final_height = height_pixel.r + delta_amount;
+                        height_tex.SetPixel(pix_x, pix_y,
+                            new Color(final_height, height_pixel.g, height_pixel.b, height_pixel.a));
+                        
+                        // Change heat
+                        if (change_heat)
+                        {
+                            // Get the heat texture to add additional heat
+                            var heat_pixel = additional_heat_tex.GetPixel(pix_x, pix_y);
+                            var new_heat_value = Mathf.Max(temperature * final_height);
+                            additional_heat_tex.SetPixel(pix_x, pix_y,
+                                new Color(new_heat_value, heat_pixel.g, heat_pixel.b, temperature));
+                        }
+                    }
+                }
+            }
+        }
+
+        height_tex.Apply();
+        additional_heat_tex.Apply();
+        tex.Apply();
+
+        Graphics.Blit(height_tex, textures[0, (int)material.height]);
+        Graphics.Blit(additional_heat_tex, textures[0, (int)material.heat_movement]);
+
+        switch (sel)
+        {
+            case element_selection.dirt:
+                Graphics.Blit(tex, textures[0, (int)material.dirt]);
+                break;
+            case element_selection.copper:
+                Graphics.Blit(tex, textures[0, (int)material.copper]);
+                break;
+            case element_selection.obsidian:
+                Graphics.Blit(tex, textures[0, (int)material.obsidian]);
+                break;
+            case element_selection.water:
+                Graphics.Blit(tex, textures[0, (int)material.water]);
+                break;
+            case element_selection.lava:
+                Graphics.Blit(tex, textures[0, (int)material.lava]);
+                break;
+            case element_selection.steam:
+                Graphics.Blit(tex, textures[0, (int)material.steam]);
+                break;
+            case element_selection.heat:
+                Graphics.Blit(tex, textures[0, (int)material.heat_movement]);
+                break;
+        }
+
+        // Destroy the textures to stop memory leaks
+        UnityEngine.Object.Destroy(tex);
+        UnityEngine.Object.Destroy(height_tex);
+        UnityEngine.Object.Destroy(additional_heat_tex);
+
+        // Restore previously active render texture
+        RenderTexture.active = currentActiveRT;
+    }
+
     // Update is called once per frame
     /// <summary>
     /// 
     /// </summary>
     void Update()
     {
-
         // Convert mouse position to Grid Coordinates
         Vector3 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 local_pos = transform.InverseTransformPoint(pos);
@@ -303,40 +456,11 @@ public class MainScript : MonoBehaviour
             // Numbers select elements
             if ('0' <= c && c < '0' + (int)element_selection.size)
             {
-                if (c == '0')
-                {
-                    selected_element = 0;
-                    invert_selection = true;
-                }
-                else
-                {
-                    int new_selected_element = (int)(c - '0');
-                    if (new_selected_element != selected_element)
-                    {
-                        invert_selection = false;
-                    }
-                    else
-                    {
-                        invert_selection = !invert_selection;
-                    }
-                    selected_element = new_selected_element;
-                }
-
-                // Update the text
-                element_selection_text = "";
-                for (int i = 1; i < (int)element_selection.size; i++)
-                {
-                    element_selection_text += i.ToString() + ":";
-                    if ((i != selected_element) == invert_selection)
-                    {
-                        element_selection_text += "    ";
-                    }
-                    element_selection_text += ((element_selection)i).ToString() + "\n";
-                }
+                selected_element = (element_selection)(c - '0');
+                UpdateElementSelectionText();
             }
         }
-
-
+        
         string additional_text = "";
 
         // Additional text
@@ -352,181 +476,28 @@ public class MainScript : MonoBehaviour
             UnityEngine.Object.Destroy(tex);
         }
 
-        DebugText.text = pos_grid.ToString() + "\n" + additional_text + "\n" + element_selection_text;
+        DebugText.text = pos_grid.ToString() + "\n" + additional_text + "\n\n" + element_selection_text;
 
         // On mouse clicks
         if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
-            // Remember currently active render texture
-            RenderTexture currentActiveRT = RenderTexture.active;
-
-            for (int i = 1; i < (int)element_selection.size; i++)
+            // Place lots
+            if (Input.GetMouseButton(0))
             {
-                if ((i != selected_element) == invert_selection)
-                {
-                    float temperature = 0.0f;
-
-                    // Set the selected RenderTexture as the active one
-                    switch ((element_selection)i)
-                    {
-                        case element_selection.dirt:
-                            RenderTexture.active = textures[0, (int)material.dirt];
-                            temperature = 0.30f;
-                            break;
-                        case element_selection.copper:
-                            RenderTexture.active = textures[0, (int)material.copper];
-                            temperature = 0.30f;
-                            break;
-                        case element_selection.obsidian:
-                            RenderTexture.active = textures[0, (int)material.obsidian];
-                            temperature = 0.30f;
-                            break;
-                        case element_selection.water:
-                            RenderTexture.active = textures[0, (int)material.water];
-                            temperature = 0.30f;
-                            break;
-                        case element_selection.lava:
-                            RenderTexture.active = textures[0, (int)material.lava];
-                            temperature = 0.90f;
-                            break;
-                        case element_selection.steam:
-                            RenderTexture.active = textures[0, (int)material.steam];
-                            temperature = 0.40f;
-                            break;
-                        case element_selection.heat:
-                            RenderTexture.active = textures[0, (int)material.heat_movement];
-                            break;
-                    }
-
-                    // Create a new Texture2D and read the RenderTexture image into it
-                    Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
-                    tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-                    
-                    // Don't place all inverted elements
-                    if (i == selected_element)
-                    {
-                        // Place lots
-                        if (Input.GetMouseButton(0))
-                        {
-                            for (int x = -1; x < 1; x++)
-                            {
-                                for (int y = -1; y < 1; y++)
-                                {
-                                    var temp = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
-                                    tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
-                                        new Color(
-                                        Mathf.Min(temp.r + 0.3f, 0.5f),
-                                        temp.g, temp.b, temp.a));
-                                }
-                            }
-                        }
-
-                        // Place one
-                        if (Input.GetMouseButton(2))
-                        {
-                            
-                            var temp = tex.GetPixel(pos_grid.x, pos_grid.y);
-                            if (temp.r < 1.0f)
-                            {
-                                var original_amount = temp.r;
-                                var additional_amount = Mathf.Min(temp.r + 0.5f, 1.0f) - original_amount;
-                                tex.SetPixel(pos_grid.x, pos_grid.y,
-                                    new Color(original_amount + additional_amount,
-                                    temp.g, temp.b, temp.a));
-
-                                // If we're not placing heat, place some heat
-                                if ((element_selection)i != element_selection.heat)
-                                {
-                                    // Get the heat texture to add additional heat
-                                    RenderTexture.active = textures[0, (int)material.heat_movement];
-                                    Texture2D additional_heat_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
-                                    additional_heat_tex.ReadPixels(new Rect(0, 0, additional_heat_tex.width, additional_heat_tex.height), 0, 0);
-
-                                    RenderTexture.active = textures[0, (int)material.height];
-                                    Texture2D height_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
-                                    height_tex.ReadPixels(new Rect(0, 0, height_tex.width, height_tex.height), 0, 0);
-
-                                    var heat_pixel = additional_heat_tex.GetPixel(pos_grid.x, pos_grid.y);
-                                    var height_pixel = height_tex.GetPixel(pos_grid.x, pos_grid.y);
-                                    var original_total = height_pixel.r;
-                                    var final_total = original_total + additional_amount;
-                                    
-                                    // Add the height to the height texture
-                                    height_tex.SetPixel(pos_grid.x, pos_grid.y,
-                                        new Color(final_total,
-                                        height_pixel.g, height_pixel.b, height_pixel.a));
-
-                                    // Modify the heat of the heat texture to reach the appropriate temperature
-                                    additional_heat_tex.SetPixel(pos_grid.x, pos_grid.y,
-                                        new Color(temperature * final_total,
-                                        heat_pixel.g, heat_pixel.b, temperature));
-
-                                    additional_heat_tex.Apply();
-                                    height_tex.Apply();
-
-                                    Graphics.Blit(additional_heat_tex, textures[0, (int)material.heat_movement]);
-                                    Graphics.Blit(height_tex, textures[0, (int)material.height]);
-
-                                    UnityEngine.Object.Destroy(additional_heat_tex);
-                                    UnityEngine.Object.Destroy(height_tex);
-                                }
-                            }
-                        }
-                    }
-
-                    // Remove lots
-                    if (Input.GetMouseButton(1))
-                    {
-                        for (int x = -1; x < 1; x++)
-                        {
-                            for (int y = -1; y < 1; y++)
-                            {
-                                var temp = tex.GetPixel(pos_grid.x + x, pos_grid.y + y);
-                                tex.SetPixel(pos_grid.x + x, pos_grid.y + y,
-                                    new Color(
-                                    Mathf.Max(temp.r - 0.3f, 0.0f),
-                                    temp.g, temp.b, temp.a));
-                            }
-                        }
-                    }
-
-                    tex.Apply();
-                   
-                    
-                    // TODO: Hack? This switch statement to Blit shouldn't be required but somehow needs to be here.
-                    // Also the "proper" way to do this would be to write a shader to modify the texture then run the shader
-                    switch ((element_selection)i)
-                    {
-                        case element_selection.dirt:
-                            Graphics.Blit(tex, textures[0, (int)material.dirt]);
-                            break;
-                        case element_selection.copper:
-                            Graphics.Blit(tex, textures[0, (int)material.copper]);
-                            break;
-                        case element_selection.obsidian:
-                            Graphics.Blit(tex, textures[0, (int)material.obsidian]);
-                            break;
-                        case element_selection.water:
-                            Graphics.Blit(tex, textures[0, (int)material.water]);
-                            break;
-                        case element_selection.lava:
-                            Graphics.Blit(tex, textures[0, (int)material.lava]);
-                            break;
-                        case element_selection.steam:
-                            Graphics.Blit(tex, textures[0, (int)material.steam]);
-                            break;
-                        case element_selection.heat:
-                            Graphics.Blit(tex, textures[0, (int)material.heat_movement]);
-                            break;
-                    }
-                    
-                    // Destroy the textures to stop memory leaks
-                    UnityEngine.Object.Destroy(tex);
-                }
+                PlaceElement(pos_grid, selected_element, true, 2.0f * Time.deltaTime, 5);
             }
 
-            // Restore previously active render texture
-            RenderTexture.active = currentActiveRT;
+            // Place some
+            if (Input.GetMouseButton(2))
+            {
+                PlaceElement(pos_grid, selected_element, true, 10.0f * Time.deltaTime, 2);
+            }
+
+            // Remove lots
+            if (Input.GetMouseButton(1))
+            {
+                PlaceElement(pos_grid, selected_element, true, -5.0f * Time.deltaTime, 5);
+            }
         }
         
         // Make the simulation run a lot faster than the framerate
@@ -546,11 +517,39 @@ public class MainScript : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.Space))
         {
-            materials[(int)material.world].SetInt("_Highlite", selected_element);
+            materials[(int)material.world].SetInt("_Highlite", (int)selected_element);
         }
         if (Input.GetKeyUp(KeyCode.Space))
         {
             materials[(int)material.world].SetInt("_Highlite", 0);
         }
+
+
+        /*
+         * 
+         *  // Add some spots
+            for (int i = 0; i < 100; i++)
+            {
+                int spotX = (int)(Random.value * width);
+                int spotY = (int)(Random.value * height);
+
+                for (int y = -5; y < 5; y++)
+                {
+                    for (int x = -5; x < 5; x++)
+                    {
+                        if (Mathf.Abs(x) * Mathf.Abs(x) + Mathf.Abs(y) * Mathf.Abs(y) <= 20)
+                        {
+                            initial_data.SetPixel(spotX + x, spotY + y, new Color(0.1f, 0, 0, 0));
+                            
+                            if((material)tex == material.lava)
+                            {
+
+                            }
+                        }
+                    }
+                }
+            }
+
+    */
     }
 }
