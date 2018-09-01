@@ -79,11 +79,12 @@ public class MainScript : MonoBehaviour
         heat,
         size
     }
-
     element_selection selected_element = element_selection.dirt;
-
     string element_selection_text = "";
-    
+
+    // Blank texture to help with texture blitting
+    Texture2D blank_texture;
+
     /// <summary>
     /// Initializes all textures to have correct filtering / mips / etc. properties
     /// and sets them to all black (full zeroes)
@@ -94,16 +95,16 @@ public class MainScript : MonoBehaviour
         for (int tex = 0; tex < (int)material.size; tex++)
         {
             // Initialize the data to black (all zeroes)
-            Texture2D initial_data = new Texture2D(width, height);
+            blank_texture = new Texture2D(width, height);
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    initial_data.SetPixel(x, y, new Color(0, 0, 0, 0));
+                    blank_texture.SetPixel(x, y, new Color(0, 0, 0, 0));
                 }
             }
             
-            initial_data.Apply();
+            blank_texture.Apply();
 
             for (int i = 0; i < 2; i++)
             {
@@ -113,11 +114,8 @@ public class MainScript : MonoBehaviour
                 textures[i, tex].wrapMode = TextureWrapMode.Repeat;
                 textures[i, tex].filterMode = FilterMode.Point;
 
-                Graphics.Blit(initial_data, textures[i, tex]);
+                Graphics.Blit(blank_texture, textures[i, tex]);
             }
-
-            // Destroy the initial data texture to prevent memory leak
-            UnityEngine.Object.Destroy(initial_data);
         }
     }
 
@@ -524,32 +522,23 @@ public class MainScript : MonoBehaviour
             materials[(int)material.world].SetInt("_Highlite", 0);
         }
 
+        // Chaos
+        if(Input.GetKeyDown(KeyCode.C))
+        {
+            Chaos();
+        }
+    }
 
-        /*
-         * 
-         *  // Add some spots
-            for (int i = 0; i < 100; i++)
+    private void Chaos()
+    {
+        // Create each texture master (0) and slave (1) and blit to their initial data
+        for (int tex = 0; tex < (int)element_selection.size; tex++)
+        {
+            for (int i = 0; i < 10; i++)
             {
-                int spotX = (int)(Random.value * width);
-                int spotY = (int)(Random.value * height);
-
-                for (int y = -5; y < 5; y++)
-                {
-                    for (int x = -5; x < 5; x++)
-                    {
-                        if (Mathf.Abs(x) * Mathf.Abs(x) + Mathf.Abs(y) * Mathf.Abs(y) <= 20)
-                        {
-                            initial_data.SetPixel(spotX + x, spotY + y, new Color(0.1f, 0, 0, 0));
-                            
-                            if((material)tex == material.lava)
-                            {
-
-                            }
-                        }
-                    }
-                }
+                PlaceElement(new Vector2Int((int)(Random.value * width), (int)(Random.value * height)), (element_selection)tex, true, -0.5f, (int)(Random.Range(10.0f, 25.0f)));
+                PlaceElement(new Vector2Int((int)(Random.value * width), (int)(Random.value * height)), (element_selection)tex, true, 0.2f, (int)(Random.Range(5.0f, 15.0f)));
             }
-
-    */
+        }
     }
 }
