@@ -70,7 +70,7 @@ public class MainScript : MonoBehaviour
     // Element selection
     private enum element_selection
     {
-        dirt = 0,
+        dirt = 1,
         copper,
         obsidian,
         water,
@@ -234,7 +234,7 @@ public class MainScript : MonoBehaviour
     private void UpdateElementSelectionText()
     {
         element_selection_text = "";
-        for (int i = 0; i < (int)element_selection.size; i++)
+        for (int i = 1; i < (int)element_selection.size; i++)
         {
             element_selection_text += i.ToString() + ":";
             if ((element_selection)i == selected_element)
@@ -288,6 +288,8 @@ public class MainScript : MonoBehaviour
 
     private void PlaceElement(Vector2Int pos_grid, element_selection sel, bool change_heat, float amount, int radius)
     {
+        float small = 0.000001f;
+
         // TODO: The "proper" way to do this would be to write a shader to modify the texture then run the shader
 
         // Remember currently active render texture
@@ -386,9 +388,9 @@ public class MainScript : MonoBehaviour
                         {
                             // Get the heat texture to add additional heat
                             var heat_pixel = additional_heat_tex.GetPixel(pix_x, pix_y);
-                            var new_heat_value = Mathf.Max(temperature * final_height);
+                            var new_heat_value = temperature * delta_amount + heat_pixel.r;
                             additional_heat_tex.SetPixel(pix_x, pix_y,
-                                new Color(new_heat_value, heat_pixel.g, heat_pixel.b, temperature));
+                                new Color(new_heat_value, heat_pixel.g, heat_pixel.b, new_heat_value / Mathf.Max(final_height, small)));
                         }
                     }
                 }
@@ -452,7 +454,7 @@ public class MainScript : MonoBehaviour
         foreach (char c in Input.inputString)
         {
             // Numbers select elements
-            if ('0' <= c && c < '0' + (int)element_selection.size)
+            if ('1' <= c && c < '1' + (int)element_selection.size)
             {
                 selected_element = (element_selection)(c - '0');
                 UpdateElementSelectionText();
