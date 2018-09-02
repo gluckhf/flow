@@ -219,6 +219,7 @@ public class MainScript : MonoBehaviour
             // Set common properties
             materials[mat].SetFloat("_TexelWidth", 1.0f / width);
             materials[mat].SetFloat("_TexelHeight", 1.0f / height);
+            materials[mat].SetFloat("_ElementCapacity", GetCapacity((material)mat));
 
             materials[mat].SetTexture("_DirtTex", textures[0, (int)material.dirt]);
             materials[mat].SetTexture("_CopperTex", textures[0, (int)material.copper]);
@@ -229,6 +230,39 @@ public class MainScript : MonoBehaviour
             materials[mat].SetTexture("_HeightTex", textures[0, (int)material.height]);
             materials[mat].SetTexture("_HeatTex", textures[0, (int)material.heat_movement]);
         }
+    }
+
+    private float GetCapacity(material mat)
+    {
+        float cap_scaling = 4.1813f;
+
+        // Calculate the capacities surrounding this pixel
+        // https://en.wikipedia.org/wiki/Heat_capacity#Table_of_specific_heat_capacities
+        // float cap_scaling = 4.1813;
+        // float cap_water = 4.1813/cap_scaling; // Water
+        // float cap_steam = 2.0800/cap_scaling; // Water (steam)
+        // float cap_lava = 1.5600/cap_scaling; // Molten salt
+		// float cap_obsidian = 1.0000/cap_scaling; // Obsidian
+        // float cap_dirt = 0.8000/cap_scaling; // Soil
+        // float cap_copper = 0.3850/cap_scaling; // Copper
+        
+        switch (mat)
+        {
+            case material.dirt:
+                return  0.8000f / cap_scaling;
+            case material.copper:
+                return  0.3850f / cap_scaling;
+            case material.obsidian:
+                return  1.0000f / cap_scaling;
+            case material.water:
+                return  4.1813f / cap_scaling;
+            case material.lava:
+                return  1.5600f / cap_scaling;
+            case material.steam:
+                return  2.0800f / cap_scaling;
+        }
+
+        return 0.0f;
     }
     
     private void UpdateElementSelectionText()
@@ -296,33 +330,40 @@ public class MainScript : MonoBehaviour
         RenderTexture currentActiveRT = RenderTexture.active;
 
         float temperature = 0.0f;
-
+        float cap_scaling = 4.1813f;
+        float capacity = 0.0f;
         // Set the selected RenderTexture as the active one
         switch (sel)
         {
             case element_selection.dirt:
                 RenderTexture.active = textures[0, (int)material.dirt];
                 temperature = 0.30f;
+                capacity = 0.8000f / cap_scaling;
                 break;
             case element_selection.copper:
                 RenderTexture.active = textures[0, (int)material.copper];
                 temperature = 0.30f;
+                capacity = 0.3850f / cap_scaling;
                 break;
             case element_selection.obsidian:
                 RenderTexture.active = textures[0, (int)material.obsidian];
                 temperature = 0.30f;
+                capacity = 1.0000f / cap_scaling;
                 break;
             case element_selection.water:
                 RenderTexture.active = textures[0, (int)material.water];
                 temperature = 0.30f;
+                capacity = 4.1813f / cap_scaling;
                 break;
             case element_selection.lava:
                 RenderTexture.active = textures[0, (int)material.lava];
                 temperature = 0.90f;
+                capacity = 1.5600f / cap_scaling;
                 break;
             case element_selection.steam:
                 RenderTexture.active = textures[0, (int)material.steam];
                 temperature = 0.40f;
+                capacity = 2.0800f / cap_scaling;
                 break;
             case element_selection.heat:
                 RenderTexture.active = textures[0, (int)material.heat_movement];
@@ -388,7 +429,7 @@ public class MainScript : MonoBehaviour
                         {
                             // Get the heat texture to add additional heat
                             var heat_pixel = additional_heat_tex.GetPixel(pix_x, pix_y);
-                            var new_heat_value = temperature * delta_amount + heat_pixel.r;
+                            var new_heat_value = temperature*capacity * delta_amount + heat_pixel.r;
                             additional_heat_tex.SetPixel(pix_x, pix_y,
                                 new Color(new_heat_value, heat_pixel.g, heat_pixel.b, new_heat_value / Mathf.Max(final_height, small)));
                         }

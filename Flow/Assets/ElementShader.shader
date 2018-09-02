@@ -10,6 +10,7 @@
 		_HeatTex ("HeatTex", 2D) = "black" {}
 		_FlowDivisor ("FlowDivisor", float) = 5.0
 		_FlowGradient ("FlowGradient", float) = 0.0
+		_ElementCapacity ("ElementCapacity", float) = 0.0
 	}
 	SubShader
 	{
@@ -46,6 +47,7 @@
 			sampler2D _HeatTex;
 			float _FlowDivisor;
 			float _FlowGradient;
+			float _ElementCapacity;
 
 			v2f vert (appdata v)
 			{
@@ -76,18 +78,21 @@
 				return flow_in_final / _FlowDivisor;
 			}
 
-			float getHeat(float flow, float myHeat, float myHeight, float theirHeat, float theirHeight)
+			float getHeat(float flow, float myTemperature, float myElementAmount, float theirTemperature, float theirElementAmount, float elementCapacity)
 			{
 				float small = 0.000001;
 
-				// Calculate how much will flow in percentage of the total height
-				// One of these will be negative, or both zero if equal heights
-				float percent_flow_in = max(flow / max(theirHeight, small), 0);
-				float percent_flow_out = max(-flow / max(myHeight, small), 0);
+				// Calculate the heat of the actual element that is flowing
+				float heat_of_this_element = myElementAmount*elementCapacity*myTemperature;
+				float heat_of_their_element = theirElementAmount*elementCapacity*theirTemperature;
+
+				// One of these will be negative, or both zero if equal
+				float percent_flow_in = max(flow / max(theirElementAmount, small), 0);
+				float percent_flow_out = max(-flow/max(myElementAmount, small), 0);
 
 				// Figure out how much will actually flow
-				float heat_amount_in = percent_flow_in * max(theirHeat, 0);
-				float heat_amount_out = percent_flow_out * max(myHeat, 0);
+				float heat_amount_in = heat_of_their_element * percent_flow_in;
+				float heat_amount_out = heat_of_this_element * percent_flow_out;
 
 				// Use a clever statement to select between the in/out with correct sign
 				float heat_in_final = max(heat_amount_in, 0) + min(-heat_amount_out, 0);
@@ -146,14 +151,13 @@
 										   this_pixel.r,
 										   height_pixel_w.r,
 										   this_pixel_w.r);
-
 				
 					// For implementation of heat, keep track of the percentage heat flow
 					// GREEN = INWARD NORTH
-					this_pixel.g = 0.5 + 0.5 * getHeat(flow_n, heat_pixel.r, height_pixel.r, heat_pixel_n.r, height_pixel_n.r);
+					this_pixel.g = 0.5 + 0.5 * getHeat(flow_n, heat_pixel.a, this_pixel.r, heat_pixel_n.a, this_pixel_n.r, _ElementCapacity);
 
 					// BLUE = INWARD EAST
-					this_pixel.b = 0.5 + 0.5 * getHeat(flow_e, heat_pixel.r, height_pixel.r, heat_pixel_e.r, height_pixel_e.r);
+					this_pixel.b = 0.5 + 0.5 * getHeat(flow_e, heat_pixel.a, this_pixel.r, heat_pixel_e.a, this_pixel_e.r, _ElementCapacity);
 								
 					// This pixel red amount is the sum of the flows
 					this_pixel.r = this_pixel.r + flow_n + flow_e + flow_s + flow_w;

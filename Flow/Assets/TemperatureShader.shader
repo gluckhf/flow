@@ -265,11 +265,8 @@
 					+ heat_flow_in_s
 					+ heat_flow_in_w;
 
-					// Conductivity in blue
-					this_pixel.b = avg_conductivity_this;
-					
 					// Temperature in alpha				
-					this_pixel.a = max(this_pixel.r / max(height.r, small), 0);
+					this_pixel.a = max(this_pixel.r / max(total_capacity_this, small), 0);
 				}
 				else
 				{
