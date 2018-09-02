@@ -189,15 +189,65 @@
 					+ obsidian_w.r * con_obsidian)
 								/ max(height_w.r, small);
 
+					 // Calculate the capacities surrounding this pixel
+                    // https://en.wikipedia.org/wiki/Heat_capacity#Table_of_specific_heat_capacities
+                    float cap_scaling = 4.1813;
+                    float cap_water = 4.1813/cap_scaling; // Water
+                    float cap_steam = 2.0800/cap_scaling; // Water (steam)
+                    float cap_lava = 1.5600/cap_scaling; // Molten salt
+					float cap_obsidian = 1.0000/cap_scaling; // Obsidian
+                    float cap_dirt = 0.8000/cap_scaling; // Soil
+                    float cap_copper = 0.3850/cap_scaling; // Copper
+
+                    float total_capacity_this = 
+                        (water.r * cap_water 
+                    + steam.r * cap_steam 
+                    + lava.r * cap_lava 
+                    + dirt.r * cap_dirt
+                    + copper.r * cap_copper
+					+ obsidian.r * cap_obsidian);
+
+                    float total_capacity_n = 
+                        (water_n.r * cap_water 
+                    + steam_n.r * cap_steam 
+                    + lava_n.r * cap_lava 
+                    + dirt_n.r * cap_dirt
+                    + copper_n.r * cap_copper
+					+ obsidian_n.r * cap_obsidian);
+
+                    float total_capacity_e = 
+                        (water_e.r * cap_water 
+                    + steam_e.r * cap_steam 
+                    + lava_e.r * cap_lava 
+                    + dirt_e.r * cap_dirt
+                    + copper_e.r * cap_copper
+					+ obsidian_e.r * cap_obsidian);
+
+                    float total_capacity_s = 
+                        (water_s.r * cap_water 
+                    + steam_s.r * cap_steam 
+                    + lava_s.r * cap_lava 
+                    + dirt_s.r * cap_dirt
+                    + copper_s.r * cap_copper
+					+ obsidian_s.r * cap_obsidian);
+
+                    float total_capacity_w = 
+                        (water_w.r * cap_water 
+                    + steam_w.r * cap_steam 
+                    + lava_w.r * cap_lava 
+                    + dirt_w.r * cap_dirt
+                    + copper_w.r * cap_copper
+					+ obsidian_w.r * cap_obsidian);
+
 					// Calculate the temperatures surrounding this pixel
 					// Temperature = heat / average capacity
-					float temperature_this = this_pixel.r / height.r;
-					float temperature_n = this_pixel_n.r / height_n.r;
-					float temperature_e = this_pixel_e.r / height_e.r;
-					float temperature_s = this_pixel_s.r / height_s.r;
-					float temperature_w = this_pixel_w.r / height_w.r;
-
-					// Calculate the flow in each direction dur to temperature differences and average conductivities
+					float temperature_this = this_pixel.r / total_capacity_this;
+					float temperature_n = this_pixel_n.r / total_capacity_n;
+					float temperature_e = this_pixel_e.r / total_capacity_e;
+					float temperature_s = this_pixel_s.r / total_capacity_s;
+					float temperature_w = this_pixel_w.r / total_capacity_w;
+										
+					// Calculate the flow in each direction due to temperature differences and average conductivities
 					float temperature_flow_in_n = avg_conductivity_this * avg_conductivity_n * (temperature_n - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_e = avg_conductivity_this * avg_conductivity_e * (temperature_e - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_s = avg_conductivity_this * avg_conductivity_s * (temperature_s - temperature_this) / _FlowDivisor;
