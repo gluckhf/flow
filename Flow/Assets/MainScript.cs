@@ -515,6 +515,7 @@ public class MainScript : MonoBehaviour
             }
         }
 
+        // Highliting
         if(Input.GetKeyDown(KeyCode.Space))
         {
             materials[(int)material.world].SetInt("_Highlite", (int)selected_element);
@@ -533,7 +534,6 @@ public class MainScript : MonoBehaviour
 
     private void Chaos()
     {
-        // Create each texture master (0) and slave (1) and blit to their initial data
         for (int tex = 0; tex < (int)element_selection.size; tex++)
         {
             for (int i = 0; i < 10; i++)
