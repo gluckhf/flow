@@ -330,7 +330,6 @@ public class MainScript : MonoBehaviour
         RenderTexture currentActiveRT = RenderTexture.active;
 
         float temperature = 0.0f;
-        float cap_scaling = 4.1813f;
         float capacity = 0.0f;
         // Set the selected RenderTexture as the active one
         switch (sel)
@@ -338,32 +337,32 @@ public class MainScript : MonoBehaviour
             case element_selection.dirt:
                 RenderTexture.active = textures[0, (int)material.dirt];
                 temperature = 0.30f;
-                capacity = 0.8000f / cap_scaling;
+                capacity = GetCapacity(material.dirt);
                 break;
             case element_selection.copper:
                 RenderTexture.active = textures[0, (int)material.copper];
                 temperature = 0.30f;
-                capacity = 0.3850f / cap_scaling;
+                capacity = GetCapacity(material.copper);
                 break;
             case element_selection.obsidian:
                 RenderTexture.active = textures[0, (int)material.obsidian];
                 temperature = 0.30f;
-                capacity = 1.0000f / cap_scaling;
+                capacity = GetCapacity(material.obsidian);
                 break;
             case element_selection.water:
                 RenderTexture.active = textures[0, (int)material.water];
                 temperature = 0.30f;
-                capacity = 4.1813f / cap_scaling;
+                capacity = GetCapacity(material.water);
                 break;
             case element_selection.lava:
                 RenderTexture.active = textures[0, (int)material.lava];
                 temperature = 0.90f;
-                capacity = 1.5600f / cap_scaling;
+                capacity = GetCapacity(material.lava);
                 break;
             case element_selection.steam:
                 RenderTexture.active = textures[0, (int)material.steam];
                 temperature = 0.40f;
-                capacity = 2.0800f / cap_scaling;
+                capacity = GetCapacity(material.steam);
                 break;
             case element_selection.heat:
                 RenderTexture.active = textures[0, (int)material.heat_movement];
