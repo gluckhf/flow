@@ -372,8 +372,8 @@ public class MainScript : MonoBehaviour
         }
 
         // Create a new Texture2D and read the RenderTexture image into it
-        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
-        tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+        Texture2D element_tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+        element_tex.ReadPixels(new Rect(0, 0, element_tex.width, element_tex.height), 0, 0);
 
         // Get the height texture
         RenderTexture.active = textures[0, (int)material.height];
@@ -392,19 +392,20 @@ public class MainScript : MonoBehaviour
             {
                 int pix_x = pos_grid.x + x;
                 int pix_y = pos_grid.y + y;
-                var pixel = tex.GetPixel(pix_x, pix_y);
+                var element_pixel = element_tex.GetPixel(pix_x, pix_y);
+                var height_pixel = height_tex.GetPixel(pix_x, pix_y);
 
                 if (Mathf.Abs(x) * Mathf.Abs(x) + Mathf.Abs(y) * Mathf.Abs(y) < radius * radius)
                 {
                     // Calculate change in amount
                     float delta_amount = 0.0f;
-                    if (pixel.r > 0.0f && amount < 0.0f)
+                    if (height_pixel.r > 0.0f && amount < 0.0f)
                     {
-                        delta_amount = Mathf.Max(pixel.r + amount, 0.0f) - pixel.r;
+                        delta_amount = Mathf.Max(height_pixel.r + amount, 0.0f) - height_pixel.r;
                     }
-                    else if (pixel.r < 1.0f && amount > 0.0f)
+                    else if (height_pixel.r < 1.0f && amount > 0.0f)
                     {
-                        delta_amount = Mathf.Min(pixel.r + amount, 1.0f) - pixel.r;
+                        delta_amount = Mathf.Min(height_pixel.r + amount, 1.0f) - height_pixel.r;
                     }
                     else
                     {
@@ -412,13 +413,12 @@ public class MainScript : MonoBehaviour
                     }
 
                     // If there is amount to change, change it
-                    tex.SetPixel(pix_x, pix_y,
-                                    new Color(pixel.r + delta_amount, pixel.g, pixel.b, pixel.a));
+                    element_tex.SetPixel(pix_x, pix_y,
+                                    new Color(element_pixel.r + delta_amount, element_pixel.g, element_pixel.b, element_pixel.a));
 
                     // Change height
                     if (sel != element_selection.heat)
                     {
-                        var height_pixel = height_tex.GetPixel(pix_x, pix_y);
                         var final_height = height_pixel.r + delta_amount;
                         height_tex.SetPixel(pix_x, pix_y,
                             new Color(final_height, height_pixel.g, height_pixel.b, height_pixel.a));
@@ -439,7 +439,7 @@ public class MainScript : MonoBehaviour
 
         height_tex.Apply();
         additional_heat_tex.Apply();
-        tex.Apply();
+        element_tex.Apply();
 
         Graphics.Blit(height_tex, textures[0, (int)material.height]);
         Graphics.Blit(additional_heat_tex, textures[0, (int)material.heat_movement]);
@@ -447,30 +447,30 @@ public class MainScript : MonoBehaviour
         switch (sel)
         {
             case element_selection.dirt:
-                Graphics.Blit(tex, textures[0, (int)material.dirt]);
+                Graphics.Blit(element_tex, textures[0, (int)material.dirt]);
                 break;
             case element_selection.copper:
-                Graphics.Blit(tex, textures[0, (int)material.copper]);
+                Graphics.Blit(element_tex, textures[0, (int)material.copper]);
                 break;
             case element_selection.obsidian:
-                Graphics.Blit(tex, textures[0, (int)material.obsidian]);
+                Graphics.Blit(element_tex, textures[0, (int)material.obsidian]);
                 break;
             case element_selection.water:
-                Graphics.Blit(tex, textures[0, (int)material.water]);
+                Graphics.Blit(element_tex, textures[0, (int)material.water]);
                 break;
             case element_selection.lava:
-                Graphics.Blit(tex, textures[0, (int)material.lava]);
+                Graphics.Blit(element_tex, textures[0, (int)material.lava]);
                 break;
             case element_selection.steam:
-                Graphics.Blit(tex, textures[0, (int)material.steam]);
+                Graphics.Blit(element_tex, textures[0, (int)material.steam]);
                 break;
             case element_selection.heat:
-                Graphics.Blit(tex, textures[0, (int)material.heat_movement]);
+                Graphics.Blit(element_tex, textures[0, (int)material.heat_movement]);
                 break;
         }
-
+        
         // Destroy the textures to stop memory leaks
-        UnityEngine.Object.Destroy(tex);
+        UnityEngine.Object.Destroy(element_tex);
         UnityEngine.Object.Destroy(height_tex);
         UnityEngine.Object.Destroy(additional_heat_tex);
 
@@ -507,13 +507,21 @@ public class MainScript : MonoBehaviour
         {
             RenderTexture.active = textures[0, (int)material.heat_movement];
             // Create a new Texture2D and read the RenderTexture image into it
-            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
-            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            Texture2D tex_heat = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+            tex_heat.ReadPixels(new Rect(0, 0, tex_heat.width, tex_heat.height), 0, 0);
 
-            var pixel = tex.GetPixel(pos_grid.x, pos_grid.y);
+            var temperature = tex_heat.GetPixel(pos_grid.x, pos_grid.y);
 
-            additional_text = pixel.a.ToString();
-            UnityEngine.Object.Destroy(tex);
+            RenderTexture.active = textures[0, (int)material.height];
+            // Create a new Texture2D and read the RenderTexture image into it
+            Texture2D tex_height = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+            tex_height.ReadPixels(new Rect(0, 0, tex_height.width, tex_height.height), 0, 0);
+
+            var mass = tex_height.GetPixel(pos_grid.x, pos_grid.y);
+
+            additional_text = temperature.a.ToString() + "°C\n" + mass.r.ToString() + "kg";
+            UnityEngine.Object.Destroy(tex_height);
+            UnityEngine.Object.Destroy(tex_heat);
         }
 
         DebugText.text = pos_grid.ToString() + "\n" + additional_text + "\n\n" + element_selection_text;
@@ -574,13 +582,9 @@ public class MainScript : MonoBehaviour
 
     private void Chaos()
     {
-        for (int tex = 0; tex < (int)element_selection.size; tex++)
+        for (int tex = (int)element_selection.dirt; tex < (int)element_selection.heat; tex++)
         {
-            for (int i = 0; i < 10; i++)
-            {
-                PlaceElement(new Vector2Int((int)(Random.value * width), (int)(Random.value * height)), (element_selection)tex, true, -0.5f, (int)(Random.Range(10.0f, 25.0f)));
-                PlaceElement(new Vector2Int((int)(Random.value * width), (int)(Random.value * height)), (element_selection)tex, true, 0.2f, (int)(Random.Range(5.0f, 15.0f)));
-            }
+            PlaceElement(new Vector2Int((int)(Random.value * width), (int)(Random.value * height)), (element_selection)tex, true, Random.Range(0.1f, 1.0f), (int)(Random.Range(5.0f, 55.0f)));
         }
     }
 }
