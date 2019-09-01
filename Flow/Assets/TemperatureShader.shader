@@ -63,13 +63,13 @@
 				return o;
 			}
 
-			float getHeatFlow(float temperature_flow, float myHeight, float theirHeight)
+			float getHeatFlow(float temperature_flow, float myCapacity, float theirCapacity)
 			{
 				float small = 0.000001;
 
 				// Figure out how much will actually flow
-				float heat_flow_in = max(temperature_flow * theirHeight, 0);
-				float heat_flow_out = max(-temperature_flow * myHeight, 0);
+				float heat_flow_in = max(temperature_flow * theirCapacity, 0);
+				float heat_flow_out = max(-temperature_flow * myCapacity, 0);
 
 				// Use a clever statement to select between the in/out with correct sign
 				float heat_flow_final = max(heat_flow_in, 0) + min(-heat_flow_out, 0);
@@ -240,7 +240,7 @@
 					+ obsidian_w.r * cap_obsidian);
 
 					// Calculate the temperatures surrounding this pixel
-					// Temperature = heat / average capacity
+					// Temperature = total heat / total capacity
 					float temperature_this = this_pixel.r / total_capacity_this;
 					float temperature_n = this_pixel_n.r / total_capacity_n;
 					float temperature_e = this_pixel_e.r / total_capacity_e;
@@ -253,10 +253,10 @@
 					float temperature_flow_in_s = avg_conductivity_this * avg_conductivity_s * (temperature_s - temperature_this) / _FlowDivisor;
 					float temperature_flow_in_w = avg_conductivity_this * avg_conductivity_w * (temperature_w - temperature_this) / _FlowDivisor;
 
-					float heat_flow_in_n = getHeatFlow(temperature_flow_in_n, height.r, height_n.r);
-					float heat_flow_in_e = getHeatFlow(temperature_flow_in_e, height.r, height_e.r);
-					float heat_flow_in_s = getHeatFlow(temperature_flow_in_s, height.r, height_s.r);
-					float heat_flow_in_w = getHeatFlow(temperature_flow_in_w, height.r, height_w.r);
+					float heat_flow_in_n = getHeatFlow(temperature_flow_in_n, total_capacity_this, total_capacity_n);
+					float heat_flow_in_e = getHeatFlow(temperature_flow_in_e, total_capacity_this, total_capacity_e);
+					float heat_flow_in_s = getHeatFlow(temperature_flow_in_s, total_capacity_this, total_capacity_s);
+					float heat_flow_in_w = getHeatFlow(temperature_flow_in_w, total_capacity_this, total_capacity_w);
 
 					// Heat in red
 					this_pixel.r = this_pixel.r
