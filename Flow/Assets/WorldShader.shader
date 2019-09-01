@@ -97,7 +97,7 @@
 				if(_Highlite == 4) { output = water; }
 				if(_Highlite == 5) { output = lava; }
 				if(_Highlite == 6) { output = steam; }
-				if(_Highlite == 7) { output = temperature; }
+				if(_Highlite == 7) { output = temperature/1000; }
 
 				// B&W + output
 				{

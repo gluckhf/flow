@@ -157,42 +157,42 @@ public class MainScript : MonoBehaviour
 
         materials[(int)material.heat_flow] = new Material(temperature_material);
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
-        materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 5.0f);
+        materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 4.0f); //Note: Anything less than 4 will lead to instability
 
         materials[(int)material.dirt_to_lava] = new Material(state_material);
         texture_source[(int)material.dirt_to_lava] = (int)material.lava;
-        materials[(int)material.dirt_to_lava].SetFloat("_TransitionHotTemperature", 0.70f); // Transition to lava when hot
+        materials[(int)material.dirt_to_lava].SetFloat("_TransitionHotTemperature", 1800.0f); // Transition to lava when hot
         materials[(int)material.dirt_to_lava].SetFloat("_TransitionColdTemperature", 0.00f); // Does not transition to dirt
         materials[(int)material.dirt_to_lava].SetTexture("_InputTex", textures[0, (int)material.dirt]);
 
         materials[(int)material.lava_to_dirt] = new Material(state_material);
         texture_source[(int)material.lava_to_dirt] = (int)material.dirt;
-        materials[(int)material.lava_to_dirt].SetFloat("_TransitionHotTemperature", -0.70f); // Transition to lava when hot
+        materials[(int)material.lava_to_dirt].SetFloat("_TransitionHotTemperature", -1800.0f); // Transition to lava when hot
         materials[(int)material.lava_to_dirt].SetFloat("_TransitionColdTemperature", -0.00f); // Does not transition to dirt
         materials[(int)material.lava_to_dirt].SetTexture("_InputTex", textures[0, (int)material.lava]);
 
         materials[(int)material.obsidian_to_lava] = new Material(state_material);
         texture_source[(int)material.obsidian_to_lava] = (int)material.lava;
-        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionHotTemperature", 0.70f);
-        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionColdTemperature", 0.40f);
+        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionHotTemperature", 1800.0f);
+        materials[(int)material.obsidian_to_lava].SetFloat("_TransitionColdTemperature", 1300.0f);
         materials[(int)material.obsidian_to_lava].SetTexture("_InputTex", textures[0, (int)material.obsidian]);
 
         materials[(int)material.lava_to_obsidian] = new Material(state_material);
         texture_source[(int)material.lava_to_obsidian] = (int)material.obsidian;
-        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionHotTemperature", -0.70f);
-        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionColdTemperature", -0.40f);
+        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionHotTemperature", -1800.0f);
+        materials[(int)material.lava_to_obsidian].SetFloat("_TransitionColdTemperature", -1300.0f);
         materials[(int)material.lava_to_obsidian].SetTexture("_InputTex", textures[0, (int)material.lava]);
 
         materials[(int)material.water_to_steam] = new Material(state_material);
         texture_source[(int)material.water_to_steam] = (int)material.steam;
-        materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 0.40f);
-        materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 0.30f);
+        materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 101.0f);
+        materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 99.0f);
         materials[(int)material.water_to_steam].SetTexture("_InputTex", textures[0, (int)material.water]);
         
         materials[(int)material.steam_to_water] = new Material(state_material);
         texture_source[(int)material.steam_to_water] = (int)material.water;
-        materials[(int)material.steam_to_water].SetFloat("_TransitionHotTemperature", -0.40f);
-        materials[(int)material.steam_to_water].SetFloat("_TransitionColdTemperature", -0.30f);
+        materials[(int)material.steam_to_water].SetFloat("_TransitionHotTemperature", -101.0f);
+        materials[(int)material.steam_to_water].SetFloat("_TransitionColdTemperature", -99.0f);
         materials[(int)material.steam_to_water].SetTexture("_InputTex", textures[0, (int)material.steam]);
 
         materials[(int)material.finalize_water] = new Material(finalization_material);
@@ -336,32 +336,32 @@ public class MainScript : MonoBehaviour
         {
             case element_selection.dirt:
                 RenderTexture.active = textures[0, (int)material.dirt];
-                temperature = 0.30f;
+                temperature = 24.0f;
                 capacity = GetCapacity(material.dirt);
                 break;
             case element_selection.copper:
                 RenderTexture.active = textures[0, (int)material.copper];
-                temperature = 0.30f;
+                temperature = 24f;
                 capacity = GetCapacity(material.copper);
                 break;
             case element_selection.obsidian:
                 RenderTexture.active = textures[0, (int)material.obsidian];
-                temperature = 0.30f;
+                temperature = 18f;
                 capacity = GetCapacity(material.obsidian);
                 break;
             case element_selection.water:
                 RenderTexture.active = textures[0, (int)material.water];
-                temperature = 0.30f;
+                temperature = 24f;
                 capacity = GetCapacity(material.water);
                 break;
             case element_selection.lava:
                 RenderTexture.active = textures[0, (int)material.lava];
-                temperature = 0.90f;
+                temperature = 1800f;
                 capacity = GetCapacity(material.lava);
                 break;
             case element_selection.steam:
                 RenderTexture.active = textures[0, (int)material.steam];
-                temperature = 0.40f;
+                temperature = 100f;
                 capacity = GetCapacity(material.steam);
                 break;
             case element_selection.heat:
