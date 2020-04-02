@@ -3,7 +3,20 @@ guid: 8a879f7281441b4409184f114cdae876
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - mesh_renderer: {fileID: 6887651300414610166, guid: 1bdcd046e387f5e4988b751ecde09070,
+      type: 3}
+  - element_material: {fileID: 2100000, guid: 54d27fced0805fd4b9b56ea08e028ac9, type: 2}
+  - height_material: {fileID: 2100000, guid: 8d66768396142cf49a004f835a9b3bf9, type: 2}
+  - heat_material: {fileID: 2100000, guid: f70be47822e8b1741b6cf7a801d92023, type: 2}
+  - temperature_material: {fileID: 2100000, guid: f99258b3fb4307042a1401ac64ac00f2,
+      type: 2}
+  - world_material: {fileID: 2100000, guid: d5bec54ce1397ab4998dadedd0fcdf3b, type: 2}
+  - state_material: {fileID: 2100000, guid: 6dac3b738e9a5a64e96a6e53625faaf1, type: 2}
+  - finalization_material: {fileID: 2100000, guid: c50917e4b54b3554193ab2f8fe20bb18,
+      type: 2}
+  - DebugText: {fileID: 6306985448479120654, guid: 25517361431812142b21916e99da8d8c,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
