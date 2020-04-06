@@ -173,7 +173,6 @@ public class MainScript : MonoBehaviour
         materials[(int)material.obsidian].SetFloat("_FlowDivisorNS", 6.0f);
         materials[(int)material.obsidian].SetFloat("_FlowDivisorEW", 1000.0f);
         materials[(int)material.obsidian].SetFloat("_FlowGradient", gravity_strength / height / update_rate);
-        materials[(int)material.obsidian].SetInt("_FlowSideways", 0);
 
         materials[(int)material.water] = new Material(element_material);
         texture_source[(int)material.water] = (int)material.water;
@@ -284,30 +283,23 @@ public class MainScript : MonoBehaviour
     {
         float cap_scaling = 4.1813f;
 
-        // Calculate the capacities surrounding this pixel
-        // https://en.wikipedia.org/wiki/Heat_capacity#Table_of_specific_heat_capacities
-        // float cap_scaling = 4.1813;
-        // float cap_water = 4.1813/cap_scaling; // Water
-        // float cap_steam = 2.0800/cap_scaling; // Water (steam)
-        // float cap_lava = 1.5600/cap_scaling; // Molten salt
-        // float cap_obsidian = 1.0000/cap_scaling; // Obsidian
-        // float cap_dirt = 0.8000/cap_scaling; // Soil
-        // float cap_copper = 0.3850/cap_scaling; // Copper
+        // Heat capacities determine how much heat the element stores per degree of temperature
+        // https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities
 
         switch (mat)
         {
-            case material.dirt:
-                return 0.8000f / cap_scaling;
-            case material.copper:
-                return 0.3850f / cap_scaling;
-            case material.obsidian:
-                return 1.0000f / cap_scaling;
             case material.water:
                 return 4.1813f / cap_scaling;
-            case material.lava:
-                return 1.5600f / cap_scaling;
             case material.steam:
                 return 2.0800f / cap_scaling;
+            case material.lava:
+                return 1.5600f / cap_scaling;
+            case material.obsidian:
+                return 1.0000f / cap_scaling;
+            case material.dirt:
+                return 0.3850f / cap_scaling;
+            case material.copper:
+                return 0.3850f / cap_scaling;
         }
 
         return 0.0f;
@@ -384,7 +376,7 @@ public class MainScript : MonoBehaviour
         {
             case element_selection.dirt:
                 RenderTexture.active = textures[0, (int)material.dirt];
-                temperature = 24.0f;
+                temperature = 24f;
                 capacity = GetCapacity(material.dirt);
                 break;
             case element_selection.copper:
@@ -438,13 +430,13 @@ public class MainScript : MonoBehaviour
         {
             for (int y = -radius; y <= radius; y++)
             {
-                int pix_x = pos_grid.x + x;
-                int pix_y = pos_grid.y + y;
-                var element_pixel = element_tex.GetPixel(pix_x, pix_y);
-                var height_pixel = height_tex.GetPixel(pix_x, pix_y);
-
                 if (Mathf.Abs(x) * Mathf.Abs(x) + Mathf.Abs(y) * Mathf.Abs(y) < radius * radius)
                 {
+                    int pix_x = pos_grid.x + x;
+                    int pix_y = pos_grid.y + y;
+                    var element_pixel = element_tex.GetPixel(pix_x, pix_y);
+                    var height_pixel = height_tex.GetPixel(pix_x, pix_y);
+
                     // Calculate change in amount
                     float delta_amount = 0.0f;
                     if (element_pixel.r > 0.0f && amount < 0.0f)
