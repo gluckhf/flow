@@ -56,12 +56,16 @@ public class MainScript : MonoBehaviour
     public Material state_material;
     public Material finalization_material;
 
+    // Special material for trimming the edges of the textures
+    private RenderTexture trim_texture;
+
     // Provides a link to the debug text
     public Text DebugText;
 
     // World size - powers of 2 for optimal efficiency
     public int width = 256;
     public int height = 128;
+    public int edge_trim_pixels = 8;
 
     // Update rate (per second) - independent of framerate
     [Range(60f, 6000f)]
@@ -82,8 +86,6 @@ public class MainScript : MonoBehaviour
     element_selection selected_element = element_selection.dirt;
     string element_selection_text = "";
 
-    // Blank texture to help with texture blitting
-    Texture2D blank_texture;
 
     /// <summary>
     /// Initializes all textures to have correct filtering / mips / etc. properties
@@ -91,21 +93,21 @@ public class MainScript : MonoBehaviour
     /// </summary>
     private void InitializeTextures()
     {
+        // Initialize the data to black (all zeroes)
+        Texture2D blank_texture = new Texture2D(width, height);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                blank_texture.SetPixel(x, y, new Color(0, 0, 0, 0));
+            }
+        }
+
+        blank_texture.Apply();
+
         // Create each texture master (0) and slave (1) and blit to their initial data
         for (int tex = 0; tex < (int)material.size; tex++)
         {
-            // Initialize the data to black (all zeroes)
-            blank_texture = new Texture2D(width, height);
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    blank_texture.SetPixel(x, y, new Color(0, 0, 0, 0));
-                }
-            }
-
-            blank_texture.Apply();
-
             for (int i = 0; i < 2; i++)
             {
                 textures[i, tex] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
@@ -117,6 +119,34 @@ public class MainScript : MonoBehaviour
                 Graphics.Blit(blank_texture, textures[i, tex]);
             }
         }
+
+        UnityEngine.Object.Destroy(blank_texture);
+
+        // Special initialization for trim texture
+        trim_texture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+        trim_texture.useMipMap = false;
+        trim_texture.autoGenerateMips = false;
+        trim_texture.wrapMode = TextureWrapMode.Repeat;
+        trim_texture.filterMode = FilterMode.Point;
+
+        Texture2D initial_data = new Texture2D(width, height);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (y <= edge_trim_pixels || y >= height - edge_trim_pixels || x <= edge_trim_pixels || x >= width - edge_trim_pixels)
+                {
+                    initial_data.SetPixel(x, y, new Color(1, 0, 0, 0));
+                }
+                else
+                {
+                    initial_data.SetPixel(x, y, new Color(0, 0, 0, 0));
+                }
+            }
+        }
+        initial_data.Apply();
+        Graphics.Blit(initial_data, trim_texture);
+        UnityEngine.Object.Destroy(initial_data);
     }
 
     private void InitializeMaterials()
