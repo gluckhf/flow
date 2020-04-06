@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class MainScript : MonoBehaviour
 {
     public MeshRenderer mesh_renderer;
-        
+
     // Material list
     private enum material
     {
@@ -47,14 +47,14 @@ public class MainScript : MonoBehaviour
     private Material[] materials = new Material[(int)material.size];
     private int[] texture_source = new int[(int)material.size];
     private RenderTexture[,] textures = new RenderTexture[2, (int)material.size];
-        
+
     public Material element_material;
     public Material height_material;
     public Material heat_material;
     public Material temperature_material;
     public Material world_material;
     public Material state_material;
-    public Material finalization_material;  
+    public Material finalization_material;
 
     // Provides a link to the debug text
     public Text DebugText;
@@ -62,7 +62,7 @@ public class MainScript : MonoBehaviour
     // World size - powers of 2 for optimal efficiency
     public int width = 256;
     public int height = 128;
-    
+
     // Update rate (per second) - independent of framerate
     [Range(60f, 6000f)]
     public float update_rate = 2000f;
@@ -103,7 +103,7 @@ public class MainScript : MonoBehaviour
                     blank_texture.SetPixel(x, y, new Color(0, 0, 0, 0));
                 }
             }
-            
+
             blank_texture.Apply();
 
             for (int i = 0; i < 2; i++)
@@ -188,7 +188,7 @@ public class MainScript : MonoBehaviour
         materials[(int)material.water_to_steam].SetFloat("_TransitionHotTemperature", 101.0f);
         materials[(int)material.water_to_steam].SetFloat("_TransitionColdTemperature", 99.0f);
         materials[(int)material.water_to_steam].SetTexture("_InputTex", textures[0, (int)material.water]);
-        
+
         materials[(int)material.steam_to_water] = new Material(state_material);
         texture_source[(int)material.steam_to_water] = (int)material.water;
         materials[(int)material.steam_to_water].SetFloat("_TransitionHotTemperature", -101.0f);
@@ -242,29 +242,29 @@ public class MainScript : MonoBehaviour
         // float cap_water = 4.1813/cap_scaling; // Water
         // float cap_steam = 2.0800/cap_scaling; // Water (steam)
         // float cap_lava = 1.5600/cap_scaling; // Molten salt
-		// float cap_obsidian = 1.0000/cap_scaling; // Obsidian
+        // float cap_obsidian = 1.0000/cap_scaling; // Obsidian
         // float cap_dirt = 0.8000/cap_scaling; // Soil
         // float cap_copper = 0.3850/cap_scaling; // Copper
-        
+
         switch (mat)
         {
             case material.dirt:
-                return  0.8000f / cap_scaling;
+                return 0.8000f / cap_scaling;
             case material.copper:
-                return  0.3850f / cap_scaling;
+                return 0.3850f / cap_scaling;
             case material.obsidian:
-                return  1.0000f / cap_scaling;
+                return 1.0000f / cap_scaling;
             case material.water:
-                return  4.1813f / cap_scaling;
+                return 4.1813f / cap_scaling;
             case material.lava:
-                return  1.5600f / cap_scaling;
+                return 1.5600f / cap_scaling;
             case material.steam:
-                return  2.0800f / cap_scaling;
+                return 2.0800f / cap_scaling;
         }
 
         return 0.0f;
     }
-    
+
     private void UpdateElementSelectionText()
     {
         element_selection_text = "";
@@ -310,10 +310,10 @@ public class MainScript : MonoBehaviour
         initial_data.Apply();
         Graphics.Blit(initial_data, textures[0, (int)material.dirt]);
         UnityEngine.Object.Destroy(initial_data);
-        
+
         // Set up height map
         Graphics.Blit(null, textures[0, (int)material.height], materials[(int)material.height]);
-        
+
         // Set up the world renderer mesh
         {
             mesh_renderer.material.SetTexture("_MainTex", textures[0, (int)material.world]);
@@ -468,7 +468,7 @@ public class MainScript : MonoBehaviour
                 Graphics.Blit(element_tex, textures[0, (int)material.heat_movement]);
                 break;
         }
-        
+
         // Destroy the textures to stop memory leaks
         UnityEngine.Object.Destroy(element_tex);
         UnityEngine.Object.Destroy(height_tex);
@@ -500,7 +500,7 @@ public class MainScript : MonoBehaviour
                 UpdateElementSelectionText();
             }
         }
-        
+
         string additional_text = "";
 
         // Additional text
@@ -547,7 +547,7 @@ public class MainScript : MonoBehaviour
                 PlaceElement(pos_grid, selected_element, true, -5.0f * Time.deltaTime, 5);
             }
         }
-        
+
         // Make the simulation run a lot faster than the framerate
         float time_step = 1f / update_rate;
         for (float i = 0; i < Time.deltaTime; i += time_step)
@@ -564,7 +564,7 @@ public class MainScript : MonoBehaviour
         }
 
         // Highliting
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             materials[(int)material.world].SetInt("_Highlite", (int)selected_element);
         }
@@ -574,7 +574,7 @@ public class MainScript : MonoBehaviour
         }
 
         // Chaos
-        if(Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C))
         {
             Chaos();
         }
