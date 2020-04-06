@@ -399,13 +399,13 @@ public class MainScript : MonoBehaviour
                 {
                     // Calculate change in amount
                     float delta_amount = 0.0f;
-                    if (height_pixel.r > 0.0f && amount < 0.0f)
+                    if (element_pixel.r > 0.0f && amount < 0.0f)
                     {
-                        delta_amount = Mathf.Max(height_pixel.r + amount, 0.0f) - height_pixel.r;
+                        delta_amount = Mathf.Max(element_pixel.r + amount, 0.0f) - element_pixel.r;
                     }
-                    else if (height_pixel.r < 1.0f && amount > 0.0f)
+                    else if (element_pixel.r < 1.0f && amount > 0.0f)
                     {
-                        delta_amount = Mathf.Min(height_pixel.r + amount, 1.0f) - height_pixel.r;
+                        delta_amount = Mathf.Min(element_pixel.r + amount, 1.0f) - element_pixel.r;
                     }
                     else
                     {
@@ -419,16 +419,16 @@ public class MainScript : MonoBehaviour
                     // Change height
                     if (sel != element_selection.heat)
                     {
-                        var final_height = height_pixel.r + delta_amount;
+                        var final_height = Mathf.Max(height_pixel.r + delta_amount, 0.0f);
                         height_tex.SetPixel(pix_x, pix_y,
                             new Color(final_height, height_pixel.g, height_pixel.b, height_pixel.a));
-                        
+
                         // Change heat
                         if (change_heat)
                         {
                             // Get the heat texture to add additional heat
                             var heat_pixel = additional_heat_tex.GetPixel(pix_x, pix_y);
-                            var new_heat_value = temperature*capacity * delta_amount + heat_pixel.r;
+                            var new_heat_value = Mathf.Max(temperature * capacity * delta_amount + heat_pixel.r, 0.0f); ;
                             additional_heat_tex.SetPixel(pix_x, pix_y,
                                 new Color(new_heat_value, heat_pixel.g, heat_pixel.b, new_heat_value / Mathf.Max(final_height, small)));
                         }
