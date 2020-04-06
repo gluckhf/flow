@@ -58,6 +58,7 @@ public class MainScript : MonoBehaviour
 
     // Special material for trimming the edges of the textures
     private RenderTexture trim_texture;
+    public Material trim_material;
 
     // Provides a link to the debug text
     public Text DebugText;
@@ -65,7 +66,7 @@ public class MainScript : MonoBehaviour
     // World size - powers of 2 for optimal efficiency
     public int width = 256;
     public int height = 128;
-    public int edge_trim_pixels = 8;
+    private int edge_trim_pixels = 1;
 
     // Update rate (per second) - independent of framerate
     [Range(60f, 6000f)]
@@ -134,7 +135,7 @@ public class MainScript : MonoBehaviour
         {
             for (int x = 0; x < width; x++)
             {
-                if (y <= edge_trim_pixels || y >= height - edge_trim_pixels || x <= edge_trim_pixels || x >= width - edge_trim_pixels)
+                if (y < edge_trim_pixels || y >= height - edge_trim_pixels || x < edge_trim_pixels || x >= width - edge_trim_pixels)
                 {
                     initial_data.SetPixel(x, y, new Color(1, 0, 0, 0));
                 }
@@ -260,6 +261,9 @@ public class MainScript : MonoBehaviour
             materials[mat].SetTexture("_HeightTex", textures[0, (int)material.height]);
             materials[mat].SetTexture("_HeatTex", textures[0, (int)material.heat_movement]);
         }
+
+        // Special initialization for trim material
+        trim_material.SetTexture("_TrimTex", trim_texture);
     }
 
     private float GetCapacity(material mat)
@@ -588,8 +592,8 @@ public class MainScript : MonoBehaviour
                 // Run the texture through the assigned material (implements a certain shader)
                 Graphics.Blit(textures[0, texture_source[mat]], textures[1, texture_source[mat]], materials[mat]);
 
-                // Keep the master texture in index 0
-                Graphics.Blit(textures[1, texture_source[mat]], textures[0, texture_source[mat]]);
+                // Keep the master texture in index 0 and trim the edges of the map
+                Graphics.Blit(textures[1, texture_source[mat]], textures[0, texture_source[mat]], trim_material);
             }
         }
 

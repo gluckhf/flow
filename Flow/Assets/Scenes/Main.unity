@@ -578,5 +578,10 @@ PrefabInstance:
       propertyPath: DebugText
       value: 
       objectReference: {fileID: 609288946}
+    - target: {fileID: 6887651300414610167, guid: 1bdcd046e387f5e4988b751ecde09070,
+        type: 3}
+      propertyPath: trim_material
+      value: 
+      objectReference: {fileID: 2100000, guid: 2cdcd922c195eda469dd773b460bd309, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1bdcd046e387f5e4988b751ecde09070, type: 3}
