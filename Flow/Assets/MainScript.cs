@@ -67,10 +67,14 @@ public class MainScript : MonoBehaviour
     public int width = 256;
     public int height = 128;
     private int edge_trim_pixels = 1;
+    [Range(-240f, -24000f)]
+    public float gravity_strength = -6000f;
+    [Range(240f, 24000f)]
+    public float bouyancy_strength = 600f;
 
     // Update rate (per second) - independent of framerate
     [Range(60f, 6000f)]
-    public float update_rate = 2000f;
+    public float update_rate = 1200f;
 
     // Element selection
     private enum element_selection
@@ -153,32 +157,41 @@ public class MainScript : MonoBehaviour
     private void InitializeMaterials()
     {
         // Define the type of the materials
+        //Note: Anything less than 4 regarding the flow divisors will lead to instability
         materials[(int)material.dirt] = new Material(element_material);
         texture_source[(int)material.dirt] = (int)material.dirt;
-        materials[(int)material.dirt].SetFloat("_FlowDivisor", 0.0f);
+        materials[(int)material.dirt].SetFloat("_FlowDivisorNS", 0.0f);
+        materials[(int)material.dirt].SetFloat("_FlowDivisorEW", 0.0f);
 
         materials[(int)material.copper] = new Material(element_material);
         texture_source[(int)material.copper] = (int)material.copper;
-        materials[(int)material.copper].SetFloat("_FlowDivisor", 0.0f);
+        materials[(int)material.copper].SetFloat("_FlowDivisorNS", 0.0f);
+        materials[(int)material.copper].SetFloat("_FlowDivisorEW", 0.0f);
 
         materials[(int)material.obsidian] = new Material(element_material);
         texture_source[(int)material.obsidian] = (int)material.obsidian;
-        materials[(int)material.obsidian].SetFloat("_FlowDivisor", 0.0f);
+        materials[(int)material.obsidian].SetFloat("_FlowDivisorNS", 6.0f);
+        materials[(int)material.obsidian].SetFloat("_FlowDivisorEW", 1000.0f);
+        materials[(int)material.obsidian].SetFloat("_FlowGradient", gravity_strength / height / update_rate);
+        materials[(int)material.obsidian].SetInt("_FlowSideways", 0);
 
         materials[(int)material.water] = new Material(element_material);
         texture_source[(int)material.water] = (int)material.water;
-        materials[(int)material.water].SetFloat("_FlowDivisor", 10.0f);
-        materials[(int)material.water].SetFloat("_FlowGradient", -1.0f / height);
+        materials[(int)material.water].SetFloat("_FlowDivisorNS", 6.0f);
+        materials[(int)material.water].SetFloat("_FlowDivisorEW", 6.0f);
+        materials[(int)material.water].SetFloat("_FlowGradient", gravity_strength / height / update_rate);
 
         materials[(int)material.lava] = new Material(element_material);
         texture_source[(int)material.lava] = (int)material.lava;
-        materials[(int)material.lava].SetFloat("_FlowDivisor", 30.0f);
-        materials[(int)material.lava].SetFloat("_FlowGradient", -1.0f / height);
+        materials[(int)material.lava].SetFloat("_FlowDivisorNS", 6.0f);
+        materials[(int)material.lava].SetFloat("_FlowDivisorEW", 30.0f);
+        materials[(int)material.lava].SetFloat("_FlowGradient", gravity_strength / height / update_rate);
 
         materials[(int)material.steam] = new Material(element_material);
         texture_source[(int)material.steam] = (int)material.steam;
-        materials[(int)material.steam].SetFloat("_FlowDivisor", 6.0f);
-        materials[(int)material.steam].SetFloat("_FlowGradient", 1.0f / height);
+        materials[(int)material.steam].SetFloat("_FlowDivisorNS", 6.0f);
+        materials[(int)material.steam].SetFloat("_FlowDivisorEW", 12.0f);
+        materials[(int)material.steam].SetFloat("_FlowGradient", bouyancy_strength / height / update_rate);
 
         materials[(int)material.height] = new Material(height_material);
         texture_source[(int)material.height] = (int)material.height;
@@ -188,7 +201,8 @@ public class MainScript : MonoBehaviour
 
         materials[(int)material.heat_flow] = new Material(temperature_material);
         texture_source[(int)material.heat_flow] = (int)material.heat_movement;
-        materials[(int)material.heat_flow].SetFloat("_FlowDivisor", 4.0f); //Note: Anything less than 4 will lead to instability
+        materials[(int)material.heat_flow].SetFloat("_FlowDivisorNS", 4.0f);
+        materials[(int)material.heat_flow].SetFloat("_FlowDivisorEW", 4.0f);
 
         materials[(int)material.dirt_to_lava] = new Material(state_material);
         texture_source[(int)material.dirt_to_lava] = (int)material.lava;
@@ -566,19 +580,19 @@ public class MainScript : MonoBehaviour
             // Place lots
             if (Input.GetMouseButton(0))
             {
-                PlaceElement(pos_grid, selected_element, true, 2.0f * Time.deltaTime, 5);
+                PlaceElement(pos_grid, selected_element, true, 20.0f * Time.deltaTime, 3);
             }
 
             // Place some
             if (Input.GetMouseButton(2))
             {
-                PlaceElement(pos_grid, selected_element, true, 10.0f * Time.deltaTime, 2);
+                PlaceElement(pos_grid, selected_element, true, 100.0f * Time.deltaTime, 1);
             }
 
             // Remove lots
             if (Input.GetMouseButton(1))
             {
-                PlaceElement(pos_grid, selected_element, true, -5.0f * Time.deltaTime, 5);
+                PlaceElement(pos_grid, selected_element, true, -100.0f * Time.deltaTime, 5);
             }
         }
 
