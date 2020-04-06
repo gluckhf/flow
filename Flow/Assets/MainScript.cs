@@ -284,6 +284,7 @@ public class MainScript : MonoBehaviour
         float cap_scaling = 4.1813f;
 
         // Heat capacities determine how much heat the element stores per degree of temperature
+        // Must be the same values as in TemperatureShader or funny things will happen
         // https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities
 
         switch (mat)
@@ -297,7 +298,7 @@ public class MainScript : MonoBehaviour
             case material.obsidian:
                 return 1.0000f / cap_scaling;
             case material.dirt:
-                return 0.3850f / cap_scaling;
+                return 0.8000f / cap_scaling;
             case material.copper:
                 return 0.3850f / cap_scaling;
         }
